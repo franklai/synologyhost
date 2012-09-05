@@ -1,0 +1,14 @@
+{
+"name": "nicovideo",
+"hostprefix": "nicovideo.jp",
+"displayname": "Nico Nico Douga",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "yes",
+"module": "host.php",
+"class": "FujirouHostNicoVideo",
+"description": "niconico is "
+}
+
