@@ -1,0 +1,14 @@
+{
+"name": "vimeo",
+"hostprefix": "vimeo.com",
+"displayname": "Vimeo",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostVimeo",
+"description": "Vimeo is "
+}
+
