@@ -1,0 +1,14 @@
+{
+"name": "dailymotion",
+"hostprefix": "dailymotion.com",
+"displayname": "Dailymotion",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostDailymotion",
+"description": "Dailymotion is a video sharing site"
+}
+
