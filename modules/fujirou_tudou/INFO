@@ -1,0 +1,14 @@
+{
+"name": "fujirou_tudou",
+"hostprefix": "tudou.com",
+"displayname": "Tudou unblocked",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostTudou",
+"description": "Tudou is a video sharing site."
+}
+
