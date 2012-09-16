@@ -1,0 +1,14 @@
+{
+"name": "fujirou_youtube",
+"hostprefix": "youtube.com",
+"displayname": "YouTube quickfix",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostYouTube",
+"description": "Hotfix for YouTube download"
+}
+
