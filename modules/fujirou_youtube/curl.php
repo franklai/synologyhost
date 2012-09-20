@@ -7,7 +7,7 @@ class Curl
 {
 	private $response = NULL;
 
-	public function __construct($url, $data=NULL, $headers=NULL, $proxy=NULL)
+	public function __construct($url, $data=NULL, $headers=NULL, $proxy=NULL, $cookiePath='tmp_cookie.txt')
 	{
 		$method = 'get';
 
@@ -36,14 +36,15 @@ class Curl
 		}
 
 		$ch = curl_init();
-// curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
+//  curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
 		curl_setopt($ch, CURLOPT_ENCODING, ''); // Accept-Encoding. Empty sent all supported encoding types
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE); // Do not follow any "Location: " header
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); // skip verifying peer's certificate
 		curl_setopt($ch, CURLOPT_HEADER, TRUE); // output header
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $sent_headers); // array of HTTP headers
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // not directly output
-		curl_setopt($ch, CURLOPT_COOKIEFILE, 'tmp_cookie.txt'); // set load cookie file
-		curl_setopt($ch, CURLOPT_COOKIEJAR, 'tmp_cookie.txt'); // set save cookie file
+		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiePath); // set load cookie file
+		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiePath); // set save cookie file
 		curl_setopt($ch, CURLOPT_URL, $url); // set url
 		if ('get' == $method) {
 			curl_setopt($ch, CURLOPT_HTTPGET, TRUE);

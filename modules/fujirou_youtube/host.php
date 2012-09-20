@@ -152,7 +152,8 @@ class FujirouHostYouTube
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostYouTube';
-    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
+//    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
+    $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
