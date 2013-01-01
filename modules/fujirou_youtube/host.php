@@ -28,7 +28,7 @@ class FujirouHostYouTube
 
         // 2. find url_encoded_fmt_stream_map
         $encodedMapString = $this->getMapString($html);
-        $mapString = urldecode($encodedMapString);
+        $mapString = $encodedMapString;
 
         // 3. parse map string
         $videoMap = $this->parseMapString($mapString);
@@ -74,7 +74,7 @@ class FujirouHostYouTube
 
     private function parseMapString($mapString)
     {
-        $urlList = explode(',itag=', $mapString);
+        $urlList = explode(',', $mapString);
 
         $videoMap = array();
 
@@ -82,23 +82,12 @@ class FujirouHostYouTube
             if (empty($url)) {
                 continue;
             }
-            $itemList = explode('\\u0026', $url);
 
-            if (count($itemList) !== 6) {
-                continue;
-            }
+            $queries = str_replace('\\u0026', '&', $url);
 
-            // 0. itag
-            // 1. url
-            // 2. type
-            // 3. fallback_host
-            // 4. sig
-            // 5. quality
+            parse_str($queries, $items);
 
-            $url = str_replace('url=', '', $itemList[1]);
-            $itag = str_replace('itag=', '', $itemList[0]);
-            $sig = str_replace('sig=', '', $itemList[4]);
-            $videoMap[$itag] = $url . "&signature=" . $sig;
+            $videoMap[$items['itag']] = $items['url'] . "&signature=" . $items['sig'];
         }
 
         return $videoMap;
@@ -153,7 +142,8 @@ class FujirouHostYouTube
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostYouTube';
 //    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
-    $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
+//     $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
+    $url = 'http://www.youtube.com/watch?v=DzOQ-shPKV4';
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
