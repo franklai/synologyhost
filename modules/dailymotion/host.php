@@ -73,24 +73,10 @@ class FujirouHostDailymotion
     }
 
     private function getVideoUrl($json) {
-        $pattern = '/"hqURL":"("[^"]+")"/';
+        $pattern = '/"video_url":"([^"]+)"/';
         $url = Common::getFirstMatch($json, $pattern);
 
-        if (empty($url)) {
-            // failed to find hqURL, try sd
-            $pattern = '/"sdURL":"([^"]+)"/';
-            $url = Common::getFirstMatch($json, $pattern);
-        }
-
-        if (empty($url)) {
-            // hq and sd both failed, try ld
-            $pattern = '/"ldURL":"([^"]+)"/';
-            $url = Common::getFirstMatch($json, $pattern);
-        }
-
-        // manually json decode the string
-        $url = str_replace('\\/', '/', $url);
-
+        $url = urldecode($url);
         return $url;
     }
 
