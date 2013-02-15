@@ -12,7 +12,7 @@ class Common {
 
         $end = strpos($string, $suffix, $start);
         if ($end === FALSE) {
-            echo "cannot find suffix\n";
+            echo "cannot find suffix [$suffix]\n";
             return $string;
         }
 
@@ -30,9 +30,23 @@ class Common {
         return FALSE;
     }
 
-    static function hasString($string, $pattern)
-    {
+    static function getAllFirstMatch($string, $pattern) {
+        $ret = preg_match_all($pattern, $string, $matches);
+        if ($ret > 0) {
+            return $matches[1];
+        } else {
+            return $ret;
+        }
+    }
+
+    static function hasString($string, $pattern) {
         return (FALSE === strpos($string, $pattern))? FALSE : TRUE;
+    }
+
+    static function decodeHtml($html) {
+        $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
+        $html = str_replace('&apos;', "'", $html);
+        return $html;
     }
 
     static function sanitizePath($path) {
@@ -42,22 +56,10 @@ class Common {
 
     static function debug($string)
     {
-        if (!array_key_exists('HTTP_USER_AGENT', $_SERVER)) {
-//             echo $string ."\n";
+        if (!array_key_exists('HTTP_USER_AGENT', $_SERVER)
+            && !defined('DOWNLOAD_STATION_USER_AGENT')) {
+            echo $string ."\n";
         }
-    }
-}
-
-if (basename($argv[0]) === basename(__FILE__)) {
-    $testPath1     = 'ac/dc & your life? pipe |, back\slash no way <b style="color: black;">i ain\'t </b>';
-    $expectedPath1 = 'ac_dc & your life_ pipe _, back_slash no way _b style=_color_ black;__i ain\'t __b_';
-
-    $resultPath1 = Common::sanitizePath($testPath1);
-
-    if ($expectedPath1 === $resultPath1) {
-        echo "two string matched\n";
-    } else {
-        echo "not the same, \n  $expectedPath1\n  $resultPath1\n";
     }
 }
 
