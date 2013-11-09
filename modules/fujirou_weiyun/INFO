@@ -1,0 +1,14 @@
+{
+"name": "fujirou_weiyun",
+"hostprefix": "share.weiyun.com",
+"displayname": "QQ Weiyun",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostWeiyun",
+"description": "Weiyun is a cloud sync service of QQ."
+}
+
