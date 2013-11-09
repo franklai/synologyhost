@@ -137,6 +137,11 @@ class FujirouCommon
 
         return round($size);
     }
+
+    public static function sanitizePath($path) {
+        $specialChars = array('\\', '/', ':', '*', '?', '"', '<', '>', '|');
+        return str_replace($specialChars, '_', $path);
+    }
 }
 
 // vim: expandtab ts=4

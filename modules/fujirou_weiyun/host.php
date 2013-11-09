@@ -73,10 +73,13 @@ class FujirouHostWeiyun
         }
         $finalUrl = $response->headers['Location'];
 
-//         $filename = Common::sanitizePath($title) . ".flv";
+        $pattern = '/fname=([^&]+)&/';
+        $fname = FujirouCommon::getFirstMatch($finalUrl, $pattern);
+        $fname = FujirouCommon::sanitizePath(urldecode($fname));
 
         $ret = array(
-            DOWNLOAD_URL      => $finalUrl
+            DOWNLOAD_URL      => $finalUrl,
+            DOWNLOAD_FILENAME => $fname
         );
 
         return $ret;
@@ -91,6 +94,8 @@ if (basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostWeiyun';
     $url = 'http://url.cn/SUk0NR';
     $url = 'http://share.weiyun.com/8e921eae751070bbda9ccaf9a654c63c';
+    $url = 'http://url.cn/MOR43j';
+    $url = 'http://share.weiyun.com/4f7aad1ce0ebaeea694a2d899f3c7319';
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
