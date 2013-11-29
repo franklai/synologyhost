@@ -67,7 +67,10 @@ class FujirouHostWeiyun
             'useragent' => $this->userAgent,
             'follow_redirects' => false
         );
-        $response = Requests::get($dlUrl, array(), $options);
+        $headers = array(
+            'referer' => 'http://share.weiyun.com/'
+        );
+        $response = Requests::get($dlUrl, $headers, $options);
         if ($response->status_code !== 302) {
             return $ret;
         }
