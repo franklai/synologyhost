@@ -57,7 +57,7 @@ class FujirouHostWeiyun
 
         $content = $response->body;
 
-        $pattern = '/(http:\/\/sync.box.qq.com[^"]+)/';
+        $pattern = '/(http:\/\/web.cgi.weiyun.com[^"]+)/';
         $dlUrl = FujirouCommon::getFirstMatch($content, $pattern);
         if (!$dlUrl) {
             return $ret;
