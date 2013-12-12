@@ -56,6 +56,7 @@ class FujirouHostWeiyun
         }
 
         $content = $response->body;
+        $cookies = $response->cookies;
 
         $pattern = '/(http:\/\/web.cgi.weiyun.com[^"]+)/';
         $dlUrl = FujirouCommon::getFirstMatch($content, $pattern);
@@ -65,7 +66,8 @@ class FujirouHostWeiyun
 
         $options = array(
             'useragent' => $this->userAgent,
-            'follow_redirects' => false
+            'follow_redirects' => false,
+            'cookies' => $cookies
         );
         $headers = array(
             'referer' => 'http://share.weiyun.com/'
