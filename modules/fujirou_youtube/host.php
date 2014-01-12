@@ -8,11 +8,25 @@ if (!class_exists('Curl')) {
 
 class FujirouHostYouTube
 {
-    public function __construct($url, $username, $password, $hostInfo) {
+    public function __construct($url, $username, $password, $hostInfo, $verbose=false) {
         $this->url = $url;
         $this->username = $username;
         $this->password = $password;
         $this->hostInfo = $hostInfo;
+        $this->verbose = $verbose;
+    }
+
+    private function printMsg($msg)
+    {
+        if (!$this->verbose) {
+            return;
+        }
+
+        if (is_array($msg)) {
+            print_r($msg);
+        } else {
+            echo $msg;
+        }
     }
 
     public function GetDownloadInfo() {
@@ -33,19 +47,19 @@ class FujirouHostYouTube
         $encodedMapString = $this->getMapString($html);
         $mapString = $encodedMapString;
 
-//         $adaptiveFormats = $this->getAdaptiveFmts($html);
-//         $adaptiveMap = $this->parseMapString($adaptiveFormats, $html);
-// echo "\n == encoded ==\n";
-// echo $mapString;
-// echo "\n == adaptive ==\n";
-// echo $adaptiveFormats;
-// echo "\n\n";
-// print_r($adaptiveMap);
-// echo "\n\n";
+        $adaptiveFormats = $this->getAdaptiveFmts($html);
+        $adaptiveMap = $this->parseMapString($adaptiveFormats, $html);
 
         // 3. parse map string
         $videoMap = $this->parseMapString($mapString, $html);
-        $video = $this->chooseVideo($videoMap);
+
+        $this->printMsg("\n == url map ==\n");
+        $this->printMsg($videoMap);
+        $this->printMsg("\n == adaptive ==\n");
+        $this->printMsg($adaptiveMap);
+        $this->printMsg("\n\n");
+
+        $video = $this->chooseVideo($videoMap, $adaptiveMap);
         if (empty($video)) {
             return $ret;
         }
@@ -103,17 +117,20 @@ class FujirouHostYouTube
             $signature = '';
             if (array_key_exists('sig', $items)) {
                 $signature = $items['sig'];
+                $this->printMsg("\tFound sig: $signature\n");
             } elseif (array_key_exists('s', $items)) {
                 // encrypted signature
                 $encrypted = $items['s'];
                 $signature = $this->decryptSignature($encrypted);
+                $this->printMsg("\tFound s: $signature\n");
             }
 
-            if ($signature === '') {
-                printf("Failed to parse signature");
+            $paramSignature = '';
+            if (!empty($signature)) {
+                $paramSignature = '&signature=' . $signature;
             }
 
-            $videoMap[$items['itag']] = $items['url'] . "&signature=" . $signature;
+            $videoMap[$items['itag']] = $items['url'] . $paramSignature;
         }
 
         return $videoMap;
@@ -216,7 +233,7 @@ class FujirouHostYouTube
         return htmlspecialchars_decode($encodedTitle, ENT_QUOTES);
     }
 
-    private function chooseVideo($videoMap) {
+    private function chooseVideo($videoMap, $adaptiveMap) {
         // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
         $itagMap = array(
             "37" => "mp4", // "1080p, MP4, H.264, AAC"
@@ -225,6 +242,20 @@ class FujirouHostYouTube
             "18" => "mp4", // "360p, MP4, H.264, AAC",
             "35" => "flv", // "480p, FLV, H.264, AAC",
             "5"  => "flv" // "240p, FLV, H.263, MP3",
+        );
+
+        // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
+        $adaptiveItagMap = array(
+            "137" => "mp4", // DASH video, "1080p", MP4, H.264, High
+            "136" => "mp4", // DASH video, "720p", MP4, H.264, Main
+            "135" => "mp4", // DASH video, "480p", MP4, H.264, Main
+            "134" => "mp4", // DASH video, "360p", MP4, H.264, Main
+            "133" => "mp4", // DASH video, "240p", MP4, H.264, Main
+
+            "140" => "mp4", // DASH audio, AAC, 128
+            "139" => "mp4", // DASH audio, AAC, 48
+            "172" => "webm", // DASH audio, Vorbis, 192
+            "171" => "webm" // DASH audio, Vorbis, 128
         );
 
         if (empty($videoMap)) {
@@ -267,7 +298,7 @@ $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula 
     }
 
     $refClass = new ReflectionClass($module);
-    $obj = $refClass->newInstance($url, '', '', array());
+    $obj = $refClass->newInstance($url, '', '', array(), true);
 
     echo "Get download info of '$url'\n\n";
     $info = $obj->GetDownloadInfo();
