@@ -121,7 +121,7 @@ class FujirouHostBaidu
             return $ret;
         }
 
-        $finalUrl = $json['dllink'];
+        $finalUrl = $json['dlink'];
 
         $ret = array(
             DOWNLOAD_URL      => $finalUrl,
