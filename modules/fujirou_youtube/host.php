@@ -169,23 +169,24 @@ class FujirouHostYouTube
 
 //         if ($playerId === 'vfln8xPyM')
         // mane shite
+        $decrypted = $this->decryptBy_vflbxes4n($encrypted);
 
-        $a = str_split($encrypted);
-
-        // swap(0, 36)
-        // swap(0, 14)
-        // slice(1)
-        // reverse()
-        // slice(1)
-        // swap(0, 54)
-        $a = $this->swap($a, 0, 36);
-        $a = $this->swap($a, 0, 14);
-        $a = array_slice($a, 1);
-        $a = array_reverse($a);
-        $a = array_slice($a, 1);
-        $a = $this->swap($a, 0, 54);
-
-        $decrypted = implode('', $a);
+//         $a = str_split($encrypted);
+// 
+//         // swap(0, 36)
+//         // swap(0, 14)
+//         // slice(1)
+//         // reverse()
+//         // slice(1)
+//         // swap(0, 54)
+//         $a = $this->swap($a, 0, 36);
+//         $a = $this->swap($a, 0, 14);
+//         $a = array_slice($a, 1);
+//         $a = array_reverse($a);
+//         $a = array_slice($a, 1);
+//         $a = $this->swap($a, 0, 54);
+// 
+//         $decrypted = implode('', $a);
 
 //         echo "\n== == ==\n";
 //         echo "player url: $url";
@@ -201,6 +202,23 @@ class FujirouHostYouTube
 //         echo "decrypted: $decrypted";
 //         echo "\n== == ==\n";
 //         echo "\n== == ==\n";
+        return $decrypted;
+    }
+
+    private function decryptBy_vflbxes4n($encrypted) {
+        $a = str_split($encrypted);
+
+        // swap(0, 4)
+        // slice(3)
+        // swap(0, 53)
+        // slice(2)
+        $a = $this->swap($a, 0, 4);
+        $a = array_slice($a, 3);
+        $a = $this->swap($a, 0, 53);
+        $a = array_slice($a, 2);
+
+        $decrypted = implode('', $a);
+
         return $decrypted;
     }
 
@@ -291,6 +309,7 @@ $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
 
     if ($argc >= 2) {
+
         $argument = $argv[1];
         if (substr(strtolower($argument), 0, 4) === 'http') {
             $url = $argument;
