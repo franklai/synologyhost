@@ -1,0 +1,14 @@
+{
+"name": "fujirou_baidu",
+"hostprefix": "pan.baidu.com",
+"displayname": "Baidu Pan",
+"version": "1.0",
+"majorversion": "3",
+"minorversion": "2",
+"minfirmware": "1834",
+"authentication": "no",
+"module": "host.php",
+"class": "FujirouHostBaidu",
+"description": "Baidu pan service"
+}
+
