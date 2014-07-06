@@ -14,6 +14,16 @@ class FujirouHostDailymotion
         $this->username = $username;
         $this->password = $password;
         $this->hostInfo = $hostInfo;
+
+        // type of video url please check the following url
+        // http://www.dailymotion.com/doc/api/obj-video.html
+        $this->video_url_list = array(
+            'stream_h264_hd1080_url',
+            'stream_h264_hd_url',
+            'stream_h264_hq_url',
+            'stream_h264_url',
+            'stream_h264_ld_url'
+        );
     }
 
     // shall return an array
@@ -37,23 +47,27 @@ class FujirouHostDailymotion
 
         // 2. get json info of video
         $jsonUrl = sprintf(
-            "http://www.dailymotion.com/sequence/full/%s",
+            "http://www.dailymotion.com/embed/video/%s",
             $videoId
         );
         $response = new Curl($jsonUrl, NULL, NULL, NULL);
-        $json = $response->get_content();
+        $html = $response->get_content();
+
+        $json = $this->getJsonFromHtml($html);
+        if (!$json) {
+            return $ret;
+        }
 
         // 3. find url from json info
         $videoUrl = $this->getVideoUrl($json);
         Common::debug("final url: $videoUrl");
+        if (empty($videoUrl)) {
+            return $ret;
+        }
 
         // 4. find title from json
         $videoTitle = $this->getVideoTitle($json);
         Common::debug("video title: $videoTitle");
-
-        if (empty($videoUrl)) {
-            return $ret;
-        }
 
         // TODO: check it's flv or mp4 format
         $filename = Common::sanitizePath($videoTitle) . ".mp4";
@@ -66,6 +80,20 @@ class FujirouHostDailymotion
         return $ret;
     }
 
+    private function getJsonFromHtml($html)
+    {
+        $prefix = 'var info = {';
+        $suffix = '}},';
+        $js = Common::getSubString($html, $prefix, $suffix);
+        if (empty($js)) {
+            return false;
+        }
+
+        $pattern = '/var info = (\{.*\}\}),/';
+        $json_string = Common::getFirstMatch($js, $pattern);
+        return json_decode($json_string, true);
+    }
+
     private function getVideoId($url)
     {
         $pattern = '/dailymotion.com\/video\/([^_]+)_/i';
@@ -73,16 +101,20 @@ class FujirouHostDailymotion
     }
 
     private function getVideoUrl($json) {
-        $pattern = '/"video_url":"([^"]+)"/';
-        $url = Common::getFirstMatch($json, $pattern);
+        $url = null;
 
-        $url = urldecode($url);
+        foreach ($this->video_url_list as $key) {
+            if (array_key_exists($key, $json) && isset($json[$key])) {
+                $url = $json[$key];
+                break;
+            }
+        }
+
         return $url;
     }
 
     private function getVideoTitle($json) {
-        $pattern = '/"DMTITLE":"([^"]+)"/';
-        return Common::getFirstMatch($json, $pattern);
+        return $json['title'];
     }
 }
 
@@ -94,7 +126,8 @@ if (basename($argv[0]) === basename(__FILE__)) {
 //     $url = 'http://www.dailymotion.com/video/xtdg4e_2012-mtv-vma-performance-recap-pink-taylor-swift-lil-wayne_music';
 //     $url = 'http://www.dailymotion.com/video/xnqusv_the-next-list-jake-shimabukuro_lifestyle?search_algo=2';
 //     $url = 'http://www.dailymotion.com/video/x25ef_jake-shimabukuro-virtuose-du-ukulel_music?search_algo=2';
-    $url = 'http://www.dailymotion.com/video/xa02_while-my-ukulele-gently-weeps_music';
+//     $url = 'http://www.dailymotion.com/video/xa02_while-my-ukulele-gently-weeps_music';
+    $url = 'http://www.dailymotion.com/video/x1u5p24_20080809-vs';
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
