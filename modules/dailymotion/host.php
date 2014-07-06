@@ -127,7 +127,13 @@ if (basename($argv[0]) === basename(__FILE__)) {
 //     $url = 'http://www.dailymotion.com/video/xnqusv_the-next-list-jake-shimabukuro_lifestyle?search_algo=2';
 //     $url = 'http://www.dailymotion.com/video/x25ef_jake-shimabukuro-virtuose-du-ukulel_music?search_algo=2';
 //     $url = 'http://www.dailymotion.com/video/xa02_while-my-ukulele-gently-weeps_music';
-    $url = 'http://www.dailymotion.com/video/x1u5p24_20080809-vs';
+//    $url = 'http://www.dailymotion.com/video/x1u5p24_20080809-vs';
+    $url = 'http://www.dailymotion.com/video/x1dt64a_%E5%AE%89%E5%AE%A4%E5%A5%88%E7%BE%8E%E6%81%B5-contrail-500th-live-%E3%82%A2%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%AB_music';
+    $url = 'http://www.dailymotion.com/video/x1xnacg_2014-05-30-%E5%B5%90-%E8%AA%B0%E3%82%82%E7%9F%A5%E3%82%89%E3%81%AA%E3%81%84-m%E3%82%B9%E3%83%86_music';
+
+    if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
+        $url = $argv[1];
+    }
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
