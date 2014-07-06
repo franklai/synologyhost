@@ -2,7 +2,7 @@
 "name": "vimeo",
 "hostprefix": "vimeo.com",
 "displayname": "Vimeo",
-"version": "1.0",
+"version": "1.1",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",

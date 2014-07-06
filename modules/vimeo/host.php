@@ -38,17 +38,15 @@ class FujirouHostVimeo
         $response = new Curl($url, NULL, NULL, NULL);
         $html = $response->get_content();
 
-        // 2. find signature and timestamp
-        $signature = $this->get_signature($html);
-        $timestamp = $this->get_timestamp($html);
-        $isHD = $this->get_is_hd($html);
-        Common::debug("signature: $signature, timestamp: $timestamp");
+        // 2. find json with video info
+        $json = $this->get_json($html);
 
-        // 3. send 2nd request, and get Location value
-        $videoUrl = $this->get_video_url($videoId, $signature, $timestamp, $isHD);
+        // 3. get url and title
+        $videoUrl = $this->get_video_url($json);
         Common::debug("final url: $videoUrl");
 
-        $title = $this->parse_title($html);
+        $title = $this->get_title($json);
+        Common::debug("title: $title");
 
         if (empty($videoUrl)) {
             return $ret;
@@ -64,48 +62,66 @@ class FujirouHostVimeo
         return $ret;
     }
 
+    private function get_json($html)
+    {
+        $pattern = '/data-config-url="(.*?)"/';
+        $config_url = Common::getFirstMatch($html, $pattern);
+        Common::debug('config-url:' . $config_url);
+        if (empty($config_url)) {
+            return false;
+        }
+        $config_url = Common::decodeHtml($config_url);
+
+        $response = new Curl($config_url, NULL, NULL, NULL);
+        $raw_json = $response->get_content();
+
+        $json = json_decode($raw_json, true);
+
+        return $json;
+    }
+
     private function get_video_id($url)
     {
         $pattern = '/vimeo.com\/([0-9]+)/i';
         return Common::getFirstMatch($url, $pattern);
     }
 
-    private function get_signature($html)
+    private function get_json_by_keys(&$json, $key_string)
     {
-        $pattern = '/"signature":"([0-9a-z]+)"/i';
-        return Common::getFirstMatch($html, $pattern);
+        $keys = explode('.', $key_string);
+
+        $item =& $json;
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $item)) {
+                $item =& $item[$key];
+            } else {
+                return false;
+            }
+        }
+
+        return $item;
     }
 
-    private function get_timestamp($html)
-    {
-        $pattern = '/"timestamp":([0-9]+)/i';
-        return Common::getFirstMatch($html, $pattern);
+    private function get_video_url($json) {
+        $item = $this->get_json_by_keys($json, 'request.files.h264');
+        if (!$item) {
+            return false;
+        }
+        if (array_key_exists('hd', $item)) {
+            return $item['hd']['url'];
+        } elseif (array_key_exists('sd', $item)) {
+            return $item['sd']['url'];
+        }
+
+        return false;
     }
 
-    private function get_is_hd($html)
-    {
-        $pattern = '<meta itemprop="videoQuality" content="HD">';
-        return Common::hasString($html, $pattern);
-    }
+    private function get_title($json) {
+        if (isset($json['video']) && isset($json['video']['title'])) {
+            return $json['video']['title'];
+        }
 
-    private function get_video_url($videoId, $signature, $timestamp, $isHD) {
-        // http://player.vimeo.com/play_redirect?clip_id=12392080&sig=e62526d8ad02d4a36f8c820df6d60eee&time=1346743364&quality=sd&codecs=H264,VP8,VP6&type=moogaloop_local&embed_location=
-        $requestUrl = sprintf(
-            "http://player.vimeo.com/play_redirect?clip_id=%s&sig=%s&time=%s&quality=%s&codecs=H264,VP8,VP6",
-            $videoId, $signature, $timestamp, $isHD ? 'hd' : 'sd'
-        );
-
-        $response = new Curl($requestUrl, NULL, NULL, NULL);
-        $location = $response->get_header('Location');
-
-        return $location;
-    }
-
-    private function parse_title($html) {
-        // property="og:title" content="Don&#039;t Look Back in Anger"
-        $pattern = '/property="og:title" content="([^"]+)"/';
-        $encodedTitle = Common::getFirstMatch($html, $pattern);
-        return html_entity_decode($encodedTitle, ENT_QUOTES, 'UTF-8');
+        return false;
     }
 }
 
@@ -115,6 +131,10 @@ class FujirouHostVimeo
 if (basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostVimeo';
     $url = 'http://vimeo.com/15076572';
+
+    if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
+        $url = $argv[1];
+    }
 
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array());
