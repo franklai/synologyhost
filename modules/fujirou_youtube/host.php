@@ -42,6 +42,9 @@ class FujirouHostYouTube
 
         // parse player url
         $this->playerUrl = $this->getPlayerUrl($html);
+        $this->printMsg("\n == player url ==\n");
+        $this->printMsg($this->playerUrl);
+        $this->printMsg("\n\n");
 
         // 2. find url_encoded_fmt_stream_map
         $encodedMapString = $this->getMapString($html);
@@ -79,6 +82,9 @@ class FujirouHostYouTube
             DOWNLOAD_URL      => $videoUrl,
             DOWNLOAD_FILENAME => $filename
         );
+
+        // print decrypt function if exists
+        $this-> printDecryptFunction();
 
         return $ret;
     }
@@ -122,6 +128,10 @@ class FujirouHostYouTube
                 // encrypted signature
                 $encrypted = $items['s'];
                 $signature = $this->decryptSignature($encrypted);
+                if (!$signature) {
+                    $this->printMsg("\nFailed to decrypt signature, url:b " . $this->url . "\n");
+                    return false;
+                }
                 $this->printMsg("\tFound s: $signature\n");
             }
 
@@ -132,7 +142,6 @@ class FujirouHostYouTube
 
             $videoMap[$items['itag']] = $items['url'] . $paramSignature;
         }
-
         return $videoMap;
     }
 
@@ -145,64 +154,149 @@ class FujirouHostYouTube
         return $url;
     }
 
-    private function decryptSignature($encrypted)
+    private function parsePlayerUrlId($url)
     {
-        // get player content first
+        $pattern = '/-([a-zA-Z0-9]+)\/html5player.js/';
+        $id = Common::getFirstMatch($url, $pattern);
+
+        return $id;
+    }
+
+    private function getDecryptFunctionArray()
+    {
+        if ($this->decryptFuncArray) {
+            return $this->decryptFuncArray;
+        }
 
         $url = $this->playerUrl;
         if (substr($url, 0, 2) === '//') {
             $url = 'https:' . $url;
         }
+        
+        $this->playerId = $this->parsePlayerUrlId($url);
+        $id = $this->playerId;
+        $this->printMsg("\n player url id: $id\n");
 
         $response = new Curl($url);
         $html = $response->get_content();
 
         $pattern = '/signature=([a-zA-Z]+)/';
         $funcName = Common::getFirstMatch($html, $pattern);
+        $this->printMsg("''' signature function [$funcName]'''\n");
 
         $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", $funcName);
         $funcContent = Common::getFirstMatch($html, $pattern);
+        $this->printMsg("\n == decrypt function content begin == \n");
+        $this->printMsg($funcContent);
+        $this->printMsg("\n == decrypt function content end == \n");
 
+        $pattern = sprintf("/\.([a-zA-Z0-9]{2})\(a,([0-9]+)\)/");
+        $ret = preg_match_all($pattern, $funcContent, $matches, PREG_SET_ORDER);
 
-        $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", 'Sk');
-        $Sk = Common::getFirstMatch($html, $pattern);
+        $subFuncDict = array();
 
-//         if ($playerId === 'vfln8xPyM')
-        // mane shite
-        $decrypted = $this->decryptBy_vflbxes4n($encrypted);
+        $actions = array();
+        foreach ($matches as $match) {
+            $name = $match[1];
+            $parameter = $match[2];
 
-//         $a = str_split($encrypted);
-// 
-//         // swap(0, 36)
-//         // swap(0, 14)
-//         // slice(1)
-//         // reverse()
-//         // slice(1)
-//         // swap(0, 54)
-//         $a = $this->swap($a, 0, 36);
-//         $a = $this->swap($a, 0, 14);
-//         $a = array_slice($a, 1);
-//         $a = array_reverse($a);
-//         $a = array_slice($a, 1);
-//         $a = $this->swap($a, 0, 54);
-// 
-//         $decrypted = implode('', $a);
+            if (!array_key_exists($name, $subFuncDict)) {
+                $subFuncDict[$name] = $this->parseSubFuncType($html, $name);
+            }
+            $type = $subFuncDict[$name];
 
-//         echo "\n== == ==\n";
-//         echo "player url: $url";
-//         echo "\n== == ==\n";
-//         echo "funcName: $funcName";
-//         echo "\n== == ==\n";
-//         echo "content: $funcContent";
-//         echo "\n== == ==\n";
-//         echo "Sk: $Sk";
-//         echo "\n== == ==\n";
-//         echo "encrypted: $encrypted";
-//         echo "\n== == ==\n";
-//         echo "decrypted: $decrypted";
-//         echo "\n== == ==\n";
-//         echo "\n== == ==\n";
+            $actions[] = array('type' => $type, 'parameter' => $parameter);
+        }
+
+        // fixed decrypt function
+//         $funcName = 'decryptBy_vflbxes4n';
+        $funcName = 'decrypt_general';
+        $this->actions = $actions;
+        $this->decryptFuncArray = array($this, $funcName);
+
+        return $this->decryptFuncArray;
+    }
+
+    private function parseSubFuncType($html, $funcName)
+    {
+        $pattern = sprintf("/%s:function\(.*?\)\{(.+?)\}/", $funcName);
+        $content = Common::getFirstMatch($html, $pattern);
+
+        if (false !== strpos($content, 'splice(0')) {
+            return 'splice';
+        } elseif (false !== strpos($content, 'reverse()')) {
+            return 'reverse';
+        } elseif (false !== strpos($content, 'c=a[0]')) {
+            return 'swap';
+        }
+
+        return null;
+    }
+
+    private function decryptSignature($encrypted)
+    {
+        // get player content first
+
+        $decryptFuncArray = $this->getDecryptFunctionArray();
+        if (!$decryptFuncArray) {
+            return false;
+        }
+
+        $decrypted = call_user_func_array($decryptFuncArray, array($encrypted));
         return $decrypted;
+    }
+
+    private function decrypt_general($encrypted)
+    {
+        $actions = $this->actions;
+
+        $a = str_split($encrypted);
+
+        foreach ($actions as $action) {
+            $type = $action['type'];
+            $parameter = intval($action['parameter']);
+
+            $a = call_user_func_array(array($this, $type), array($a, $parameter));
+            if (!$a) {
+                $this->printMsg(" !! What Happened !!\n");
+                break;
+            }
+        }
+
+        $decrypted = implode('', $a);
+
+        return $decrypted;
+    }
+
+    private function printDecryptFunction()
+    {
+        if (!$this->playerId || !$this->actions) {
+            return;
+        }
+
+        $actions = $this->actions;
+
+        $this->printMsg("\n@@@ Show Decrypt Function @@@\n");
+
+        $this->printMsg(sprintf('private function decryptBy_%s($encrypted)'."\n", $this->playerId));
+        $this->printMsg('{');
+        $this->printMsg("\t".'$a = str_split($encrypted);'."\n");
+        $this->printMsg("\n");
+
+        foreach ($actions as $action) {
+            $type = $action['type'];
+            $parameter = $action['parameter'];
+
+            $this->printMsg("\t".sprintf('$a = $this->%s($a, %s)', $type, $parameter)."\n");
+        }
+
+        $this->printMsg("\n");
+        $this->printMsg("\t".'$decrypted = implode("", $a);'."\n");
+        $this->printMsg("\t".'return $decrypted;'."\n");
+        $this->printMsg("}\n");
+
+        $this->printMsg("\n@@@ end decrypt function @@@\n");
+
     }
 
     private function decryptBy_vflbxes4n($encrypted) {
@@ -222,7 +316,21 @@ class FujirouHostYouTube
         return $decrypted;
     }
 
-    private function swap(&$array, $x, $y)
+    private function reverse($array, $x=0)
+    {
+        $array = array_reverse($array);
+
+        return $array;
+    }
+
+    private function splice($array, $x)
+    {
+        $array = array_slice($array, $x);
+
+        return $array;
+    }
+
+    private function swap($array, $x, $y=0)
     {
         $tmp = $array[$x];
         $array[$x] = $array[$y];
@@ -306,7 +414,9 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
 $url = 'http://www.youtube.com/watch?v=FXg4LXsg14s';
 $url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
 $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
-$url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
+// $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
+// $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
+$url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
 
     if ($argc >= 2) {
 
