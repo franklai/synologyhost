@@ -180,7 +180,7 @@ class FujirouHostYouTube
         $response = new Curl($url);
         $html = $response->get_content();
 
-        $pattern = '/signature=([a-zA-Z]+)/';
+        $pattern = '/\.sig\|\|([a-zA-Z]+)\(/';
         $funcName = Common::getFirstMatch($html, $pattern);
         $this->printMsg("''' signature function [$funcName]'''\n");
 
@@ -416,7 +416,8 @@ $url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
 $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 // $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
 // $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
-$url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
+// $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
+	$url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
 
     if ($argc >= 2) {
 
