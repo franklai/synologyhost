@@ -180,17 +180,20 @@ class FujirouHostYouTube
         $response = new Curl($url);
         $html = $response->get_content();
 
-        $pattern = '/\.sig\|\|([a-zA-Z]+)\(/';
+        $pattern = '/\.sig\|\|([a-zA-Z0-9\$]+)\(/';
         $funcName = Common::getFirstMatch($html, $pattern);
         $this->printMsg("''' signature function [$funcName]'''\n");
 
-        $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", $funcName);
+        $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
         $funcContent = Common::getFirstMatch($html, $pattern);
+        if (!$funcContent) {
+            return false;
+        }
         $this->printMsg("\n == decrypt function content begin == \n");
         $this->printMsg($funcContent);
         $this->printMsg("\n == decrypt function content end == \n");
 
-        $pattern = sprintf("/\.([a-zA-Z0-9]{2})\(a,([0-9]+)\)/");
+        $pattern = sprintf("/\.([a-zA-Z0-9\$]{2})\(a,([0-9]+)\)/");
         $ret = preg_match_all($pattern, $funcContent, $matches, PREG_SET_ORDER);
 
         $subFuncDict = array();
@@ -341,7 +344,7 @@ class FujirouHostYouTube
 
     private function getMapString($html)
     {
-        $pattern = '/"url_encoded_fmt_stream_map": "([^"]+)"/';
+        $pattern = '/"url_encoded_fmt_stream_map": ?"([^"]+)"/';
         return Common::getFirstMatch($html, $pattern);
     }
 

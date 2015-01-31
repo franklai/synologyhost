@@ -1,8 +1,8 @@
 {
 "name": "fujirou_youtube",
-"hostprefix": "youtube.com",
+"hostprefix": "youtube.com,youtu.be",
 "displayname": "YouTube alt",
-"version": "1.6",
+"version": "1.7",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
