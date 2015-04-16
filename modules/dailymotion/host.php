@@ -44,6 +44,10 @@ class FujirouHostDailymotion
         // 1. parse video id from url
         $videoId = $this->getVideoId($url);
         Common::debug('video id:' . $videoId);
+        if (!$videoId) {
+            Common::debug("Failed to get video id from url [$url].");
+            return $ret;
+        }
 
         // 2. get json info of video
         $jsonUrl = sprintf(
@@ -84,14 +88,14 @@ class FujirouHostDailymotion
     private function getJsonFromHtml($html)
     {
         $prefix = 'var info = {';
-        $suffix = "}},\n";
+        $suffix = "},\n";
         $js = Common::getSubString($html, $prefix, $suffix);
         if (empty($js)) {
             Common::debug('Failed to find info json');
             return false;
         }
 
-        $pattern = '/var info = (\{.*\}\}),/';
+        $pattern = '/var info = (\{.*\}),/';
         $json_string = Common::getFirstMatch($js, $pattern);
         return json_decode($json_string, true);
     }
@@ -99,7 +103,16 @@ class FujirouHostDailymotion
     private function getVideoId($url)
     {
         $pattern = '/dailymotion.com\/video\/([^_]+)_/i';
-        return Common::getFirstMatch($url, $pattern);
+        $id = Common::getFirstMatch($url, $pattern);
+        if ($id) {
+            return $id;
+        }
+
+        // try playlist type
+        $pattern = '/dailymotion.com\/playlist\/.*#video=(.*)/i';
+        $id = Common::getFirstMatch($url, $pattern);
+
+        return $id;
     }
 
     private function getVideoUrl($json) {
@@ -130,9 +143,9 @@ if (basename($argv[0]) === basename(__FILE__)) {
 //     $url = 'http://www.dailymotion.com/video/x25ef_jake-shimabukuro-virtuose-du-ukulel_music?search_algo=2';
 //     $url = 'http://www.dailymotion.com/video/xa02_while-my-ukulele-gently-weeps_music';
 //    $url = 'http://www.dailymotion.com/video/x1u5p24_20080809-vs';
-    $url = 'http://www.dailymotion.com/video/x1dt64a_%E5%AE%89%E5%AE%A4%E5%A5%88%E7%BE%8E%E6%81%B5-contrail-500th-live-%E3%82%A2%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%AB_music';
-    $url = 'http://www.dailymotion.com/video/x1xnacg_2014-05-30-%E5%B5%90-%E8%AA%B0%E3%82%82%E7%9F%A5%E3%82%89%E3%81%AA%E3%81%84-m%E3%82%B9%E3%83%86_music';
-    $url = 'http://www.dailymotion.com/video/x26l0ov_aa';
+    $url = 'http://www.dailymotion.com/video/x2kmre5_56kast-52-on-a-tous-des-choses-a-cacher-et-des-points-a-relier_tech';
+    $url = 'http://www.dailymotion.com/video/x2bzn2n_taylor-swift-blank-space-live-at-kiis-fm-jingle-ball-2014_music';
+    $url = 'http://www.dailymotion.com/playlist/x1hlho_ginji030_perfume-2/1#video=xt1mw1';
 
     if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
         $url = $argv[1];
