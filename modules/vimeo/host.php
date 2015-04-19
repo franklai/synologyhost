@@ -16,6 +16,11 @@ class FujirouHostVimeo
         $this->hostInfo = $hostInfo;
     }
 
+    public function onDownloaded() {
+        // dummy function to avoid PHP error log
+        return true;
+    }
+
     // shall return an array
     // {
     //     "downloadurl": ""
@@ -128,11 +133,12 @@ class FujirouHostVimeo
 // how to test this script,
 // just type the following in DS console
 // php -d open_basedir= host.php
-if (basename($argv[0]) === basename(__FILE__)) {
+if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostVimeo';
     $url = 'http://vimeo.com/15076572';
+    $url = 'https://vimeo.com/118453692';
 
-    if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
+    if (count($argv) >= 2 && 1 === preg_match('/https?:\/\//', $argv[1])) {
         $url = $argv[1];
     }
 
