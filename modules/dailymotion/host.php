@@ -26,6 +26,11 @@ class FujirouHostDailymotion
         );
     }
 
+    public function onDownloaded() {
+        // dummy function to avoid PHP error log
+        return true;
+    }
+
     // shall return an array
     // {
     //     "downloadurl": ""
@@ -136,7 +141,7 @@ class FujirouHostDailymotion
 // how to test this script,
 // just type the following in DS console
 // php -d open_basedir= host.php
-if (basename($argv[0]) === basename(__FILE__)) {
+if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostDailymotion';
 //     $url = 'http://www.dailymotion.com/video/xtdg4e_2012-mtv-vma-performance-recap-pink-taylor-swift-lil-wayne_music';
 //     $url = 'http://www.dailymotion.com/video/xnqusv_the-next-list-jake-shimabukuro_lifestyle?search_algo=2';
@@ -146,6 +151,8 @@ if (basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.dailymotion.com/video/x2kmre5_56kast-52-on-a-tous-des-choses-a-cacher-et-des-points-a-relier_tech';
     $url = 'http://www.dailymotion.com/video/x2bzn2n_taylor-swift-blank-space-live-at-kiis-fm-jingle-ball-2014_music';
     $url = 'http://www.dailymotion.com/playlist/x1hlho_ginji030_perfume-2/1#video=xt1mw1';
+    
+    $url = 'http://www.dailymotion.com/video/xn30yp_fairy-tail-bande-annonce-preview-film-2012_shortfilms'; // short, 00:31, 1.72MB
 
     if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
         $url = $argv[1];
