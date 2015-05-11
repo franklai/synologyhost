@@ -107,7 +107,7 @@ class FujirouHostDailymotion
 
     private function getVideoId($url)
     {
-        $pattern = '/dailymotion.com\/video\/([^_]+)_/i';
+        $pattern = '/dailymotion.com\/video\/([a-zA-Z0-9]+)/i';
         $id = Common::getFirstMatch($url, $pattern);
         if ($id) {
             return $id;
