@@ -59,6 +59,8 @@ class FujirouHostDailymotion
             "http://www.dailymotion.com/embed/video/%s",
             $videoId
         );
+        Common::debug("JSON url is [$jsonUrl]");
+
         $response = new Curl($jsonUrl, NULL, NULL, NULL);
         $html = $response->get_content();
 
@@ -92,15 +94,15 @@ class FujirouHostDailymotion
 
     private function getJsonFromHtml($html)
     {
-        $prefix = 'var info = {';
-        $suffix = "},\n";
+        $prefix = '{"context":';
+        $suffix = "}});\n";
         $js = Common::getSubString($html, $prefix, $suffix);
         if (empty($js)) {
             Common::debug('Failed to find info json');
             return false;
         }
 
-        $pattern = '/var info = (\{.*\}),/';
+        $pattern = '/(\{"context":.*\}\})\);/';
         $json_string = Common::getFirstMatch($js, $pattern);
         return json_decode($json_string, true);
     }
@@ -123,18 +125,40 @@ class FujirouHostDailymotion
     private function getVideoUrl($json) {
         $url = null;
 
-        foreach ($this->video_url_list as $key) {
-            if (array_key_exists($key, $json) && isset($json[$key])) {
-                $url = $json[$key];
-                break;
+        if (!array_key_exists('metadata', $json)) {
+            return $url;
+        }
+        $metadata = $json['metadata'];
+
+        if (!array_key_exists('qualities', $metadata)) {
+            return $url;
+        }
+
+        $qualities = $metadata['qualities'];
+
+        foreach ($qualities as $q => $items) {
+            Common::debug("quality [".$q."]");
+
+            foreach ($items as $item) {
+                $type = $item['type'];
+                $url = $item['url'];
+                Common::debug("\ttype [$type], url: $url");
             }
         }
+
+        Common::debug("Choose last url: $url");
 
         return $url;
     }
 
     private function getVideoTitle($json) {
-        return $json['title'];
+        if (!array_key_exists('metadata', $json)) {
+            return null;
+        }
+        if (!array_key_exists('title', $json['metadata'])) {
+            return null;
+        }
+        return $json['metadata']['title'];
     }
 }
 

@@ -6,7 +6,7 @@ class Common {
     static function getSubString($string, $prefix, $suffix) {
         $start = strpos($string, $prefix);
         if ($start === FALSE) {
-            echo "cannot find prefix, string:[$string], prefix[$prefix]\n";
+            echo "cannot find prefix, prefix[$prefix]\n";
             return $string;
         }
 
