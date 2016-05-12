@@ -69,13 +69,12 @@ class FujirouHostVimeo
 
     private function get_json($html)
     {
-        $pattern = '/data-config-url="(.*?)"/';
+        $pattern = '/"GET","(https:\/\/player.vimeo.com\/video\/.*?)",/';
         $config_url = Common::getFirstMatch($html, $pattern);
         Common::debug('config-url:' . $config_url);
         if (empty($config_url)) {
             return false;
         }
-        $config_url = Common::decodeHtml($config_url);
 
         $response = new Curl($config_url, NULL, NULL, NULL);
         $raw_json = $response->get_content();
@@ -108,17 +107,22 @@ class FujirouHostVimeo
     }
 
     private function get_video_url($json) {
-        $item = $this->get_json_by_keys($json, 'request.files.h264');
-        if (!$item) {
+        $items = $this->get_json_by_keys($json, 'request.files.progressive');
+        if (!$items) {
             return false;
         }
-        if (array_key_exists('hd', $item)) {
-            return $item['hd']['url'];
-        } elseif (array_key_exists('sd', $item)) {
-            return $item['sd']['url'];
+
+        $max_width = 0;
+        $url = '';
+        foreach ($items as $item) {
+            $width = $item['width'];
+            if ($width > $max_width) {
+                $max_width = $width;
+                $url = $item['url'];
+            }
         }
 
-        return false;
+        return $url;
     }
 
     private function get_title($json) {
@@ -135,8 +139,7 @@ class FujirouHostVimeo
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostVimeo';
-    $url = 'http://vimeo.com/15076572';
-    $url = 'https://vimeo.com/118453692';
+    $url = 'https://vimeo.com/15076572';
 
     if (count($argv) >= 2 && 1 === preg_match('/https?:\/\//', $argv[1])) {
         $url = $argv[1];
