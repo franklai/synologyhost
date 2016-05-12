@@ -180,6 +180,8 @@ class FujirouHostYouTube
         $response = new Curl($url);
         $html = $response->get_content();
 
+        $html = str_replace(";\n", ";", $html);
+
         $pattern = '/\.sig\|\|([a-zA-Z0-9\$]+)\(/';
         $funcName = Common::getFirstMatch($html, $pattern);
         $this->printMsg("''' signature function [$funcName]'''\n");
@@ -187,7 +189,11 @@ class FujirouHostYouTube
         $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
         $funcContent = Common::getFirstMatch($html, $pattern);
         if (!$funcContent) {
-            return false;
+            $pattern = sprintf("/,%s=function\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
+            $funcContent = Common::getFirstMatch($html, $pattern);
+            if (!$funcContent) {
+                return false;
+            }
         }
         $this->printMsg("\n == decrypt function content begin == \n");
         $this->printMsg($funcContent);
@@ -421,6 +427,7 @@ $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 // $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
 // $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
 	$url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
+    $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
 
     if ($argc >= 2) {
 
