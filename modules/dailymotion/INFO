@@ -2,7 +2,7 @@
 "name": "dailymotion",
 "hostprefix": "dailymotion.com",
 "displayname": "Dailymotion",
-"version": "1.5",
+"version": "1.6",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
