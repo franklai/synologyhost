@@ -14,7 +14,8 @@ class FujirouHostBilibili
         $this->password = $password;
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
-        $this->appkey = '8e9fc618fbd41e28';
+        $this->api_appkey = '8e9fc618fbd41e28';
+        $this->interface_appkey = '86385cdc024c0f6c';
 
 //         $this->proxy = '124.88.67.54:843';
         $this->proxy = null;
@@ -99,7 +100,7 @@ class FujirouHostBilibili
             $page = 1;
         }
 
-        $appkey = $this->appkey;
+        $appkey = $this->api_appkey;
         $url = "http://api.bilibili.com/view?type=json&appkey=$appkey&id=$id&page=$page";
 
         $response = new Curl($url, null, null, $this->proxy);
@@ -113,9 +114,12 @@ class FujirouHostBilibili
 
     private function request_video_by_json($json)
     {
-        $appkey = $this->appkey;
-        // $url = "http://interface.bilibili.com/v_cdn_play?appkey=$appkey&cid=" . $json['cid'];
-        $url = "http://interface.bilibili.com/playurl?sign=743b525d9e4ede29e5583a2c82b75e67&accel=1&player=abc&ts=1464603319&cid=" . $json['cid'];
+        $appkey = $this->interface_appkey;
+        $url = "http://interface.bilibili.com/v_cdn_play?appkey=$appkey&cid=" . $json['cid'];
+
+//        $sign = '3bb70b3bc5bed057be6c11cf319d17fa';
+//        $ts = '1465392650';
+//        $url = "http://interface.bilibili.com/playurl?sign=$sign&from=miniplay&player=1&quality=1&ts=$ts&cid=" . $json['cid'];
 
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
@@ -128,6 +132,7 @@ class FujirouHostBilibili
             echo json_encode($json, JSON_PRETTY_PRINT);
             echo "\n===== JSON end =====\n";
 
+            echo "\n=== url: $url\n";
             echo "\n===== XML begin =====\n";
             echo $raw;
             echo "\n===== XML end =====\n";
@@ -200,6 +205,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.bilibili.com/video/av710996/index_46.html'; // Trick 2010 Movie
 //     $url = 'http://www.bilibili.com/video/av4775518/';
     $url = 'http://www.bilibili.com/video/av4782176/'; // mayoiga E09 bilibili official
+    $url = 'http://www.bilibili.com/video/av4313184/';
 
     if ($argc >= 2) {
 
