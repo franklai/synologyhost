@@ -1,6 +1,11 @@
 #!/bin/sh
 
+if [ -f "/bin/tar" ]; then
 TAR=/bin/tar
+fi
+if [ -f "/usr/bin/tar" ]; then
+TAR=/usr/bin/tar
+fi
 PHP=/usr/bin/php
 FILES="INFO common.php curl.php host.php"
 

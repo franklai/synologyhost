@@ -152,8 +152,7 @@ class FujirouHostBilibili
             return false;
         }
 
-        $backup_block = Common::getSubString($raw, '<backup_url>', '</backup_url>', false);
-        $url = Common::getSubString($backup_block ? $backup_block : $raw, $prefix, $suffix, false);
+        $url = Common::getSubString($raw, $prefix, $suffix, false);
         
         return $url;
     }
@@ -199,13 +198,16 @@ class FujirouHostBilibili
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostBilibili';
-    $url = 'http://www.bilibili.com/video/av4209456/'; // VS Arashi
     $url = 'http://www.bilibili.com/video/av710996/'; // Trick S1E01
     $url = 'http://www.bilibili.com/video/av710996/index_2.html'; // Trick S1E02
     $url = 'http://www.bilibili.com/video/av710996/index_46.html'; // Trick 2010 Movie
 //     $url = 'http://www.bilibili.com/video/av4775518/';
     $url = 'http://www.bilibili.com/video/av4782176/'; // mayoiga E09 bilibili official
     $url = 'http://www.bilibili.com/video/av4313184/';
+    $url = 'http://www.bilibili.com/video/av4209456/'; // VS Arashi
+    $url = 'http://www.bilibili.com/video/av5751080/'; // The Yakai 20160804
+    $url = 'http://www.bilibili.com/video/av2937029/index_16.html'; //
+    $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
 
     if ($argc >= 2) {
 
