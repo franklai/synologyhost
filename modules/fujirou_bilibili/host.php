@@ -15,7 +15,8 @@ class FujirouHostBilibili
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
         $this->api_appkey = '8e9fc618fbd41e28';
-        $this->interface_appkey = '86385cdc024c0f6c';
+        $this->interface_appkey = '6f90a59ac58a4123';
+        $this->bili_key = '0bfd84cc3940035173f35e6777508326';
 
 //         $this->proxy = '124.88.67.54:843';
         $this->proxy = null;
@@ -47,16 +48,16 @@ class FujirouHostBilibili
             return $ret;
         }
 
-        // 2. get video url by bilibilijj
-        $video_url = $this->request_video_by_bilibilijj($json);
+        // 2. get video url by json
+        $video_url = $this->request_video_by_json($json);
         if (!$video_url) {
             return $ret;
         }
 
         // parse extension name from video url
-        if (false !== strpos($video_url, '/mp4/')) {
+        if (false !== strpos($video_url, '.mp4')) {
             $video_ext = 'mp4';
-        } elseif (false !== strpos($video_url, '/flv/')) {
+        } elseif (false !== strpos($video_url, '.flv')) {
             $video_ext = 'flv';
         } else{
             $video_ext = 'unknown';
@@ -67,7 +68,7 @@ class FujirouHostBilibili
             $title .= " - " . $json['partname'];
         }
 
-        $filename = "BilibiliJJ.COM-" . Common::sanitizePath($title) . "." . $video_ext;
+        $filename = Common::sanitizePath($title) . "." . $video_ext;
 
         $ret = array(
             DOWNLOAD_URL      => $video_url,
@@ -91,17 +92,18 @@ class FujirouHostBilibili
 
     private function request_json_by_url($original_url)
     {
-        $id = $this->parse_video_id($original_url);
-        if (!$id) {
+        $aid = $this->parse_video_id($original_url);
+        if (!$aid) {
             return false;
         }
+
         $page = $this->parse_page($original_url);
         if (!$page) {
             $page = 1;
         }
 
         $appkey = $this->api_appkey;
-        $url = "http://api.bilibili.com/view?type=json&appkey=$appkey&id=$id&page=$page";
+        $url = "http://api.bilibili.com/view?type=json&appkey=$appkey&id=$aid&page=$page";
 
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
@@ -139,15 +141,30 @@ class FujirouHostBilibili
         return "http://www.bilibilijj.com$video_path";
     }
 
+    private function get_sign($params_prefix)
+    {
+        $bili_key = $this->bili_key;
+        return md5("$params_prefix$bili_key");
+    }
+
     private function request_video_by_json($json)
     {
         $appkey = $this->interface_appkey;
-        $url = "http://interface.bilibili.com/v_cdn_play?appkey=$appkey&cid=" . $json['cid'];
+        $cid = $json['cid'];
 
-//        $sign = '3bb70b3bc5bed057be6c11cf319d17fa';
-//        $ts = '1465392650';
-//        $url = "http://interface.bilibili.com/playurl?sign=$sign&from=miniplay&player=1&quality=1&ts=$ts&cid=" . $json['cid'];
+        $items = [
+            "appkey=$appkey",
+            "cid=$cid",
+            "otype=json",
+            "quality=2",
+            "type=mp4"
+        ];
 
+        $params_prefix = implode('&', $items);
+
+        $sign = $this->get_sign($params_prefix);
+
+        $url = "http://interface.bilibili.com/playurl?$params_prefix&sign=$sign";
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
         if (!$raw) {
@@ -158,16 +175,29 @@ class FujirouHostBilibili
             echo "\n===== JSON begin =====\n";
             echo json_encode($json, JSON_PRETTY_PRINT);
             echo "\n===== JSON end =====\n";
-
-            echo "\n=== url: $url\n";
-            echo "\n===== XML begin =====\n";
-            echo $raw;
-            echo "\n===== XML end =====\n";
         }
 
-        $video_url = $this->find_url_in_xml($raw);
+        $video_url = $this->find_url_in_json($raw);
 
         return $video_url;
+    }
+
+    private function find_url_in_json($raw)
+    {
+
+        $json = json_decode($raw, true);
+        if (!$json) {
+            $this->printMsg("Failed to parse [$raw] to JSON.");
+            return false;
+        }
+
+        if ($this->verbose) {
+            echo "\n===== JSON begin =====\n";
+            echo json_encode($json, JSON_PRETTY_PRINT);
+            echo "\n===== JSON end =====\n";
+        }
+
+        return $json['durl'][0]['url'];
     }
 
     private function find_url_in_xml($raw)
