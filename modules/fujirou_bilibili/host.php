@@ -47,16 +47,16 @@ class FujirouHostBilibili
             return $ret;
         }
 
-        // 2. get video url by json
-        $video_url = $this->request_video_by_json($json);
+        // 2. get video url by bilibilijj
+        $video_url = $this->request_video_by_bilibilijj($json);
         if (!$video_url) {
             return $ret;
         }
 
         // parse extension name from video url
-        if (false !== strpos($video_url, '.mp4?')) {
+        if (false !== strpos($video_url, '/mp4/')) {
             $video_ext = 'mp4';
-        } elseif (false !== strpos($video_url, '.flv?')) {
+        } elseif (false !== strpos($video_url, '/flv/')) {
             $video_ext = 'flv';
         } else{
             $video_ext = 'unknown';
@@ -67,7 +67,7 @@ class FujirouHostBilibili
             $title .= " - " . $json['partname'];
         }
 
-        $filename = Common::sanitizePath($title) . "." . $video_ext;
+        $filename = "BilibiliJJ.COM-" . Common::sanitizePath($title) . "." . $video_ext;
 
         $ret = array(
             DOWNLOAD_URL      => $video_url,
@@ -105,11 +105,38 @@ class FujirouHostBilibili
 
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
+        $this->printMsg("Get content of url: $url\n");
+
         if (!$raw) {
             return false;
         }
 
         return json_decode($raw, true);
+    }
+
+    private function request_video_by_bilibilijj($json)
+    {
+        $cid = $json['cid'];
+
+        $url = "http://www.bilibilijj.com/FreeDown/$cid.php";
+
+        $response = new Curl($url, null, null, $this->proxy);
+        $raw = $response->get_content();
+        $this->printMsg("Get content of url: $url\n");
+
+        if (!$raw) {
+            $this->printMsg("Failed to curl $url\n");
+            return false;
+        }
+
+        $pattern = '/"(\/FreeDown\/DownLoad\/[0-9]+\/[mp4flv]{3}\/[0-9]+\.[A-Z0-9]+)"/';
+        $video_path = Common::getFirstMatch($raw, $pattern);
+        if (!$video_path) {
+            $this->printMsg("Failed to find pattern $pattern");
+            return false;
+        }
+
+        return "http://www.bilibilijj.com$video_path";
     }
 
     private function request_video_by_json($json)
@@ -207,7 +234,8 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.bilibili.com/video/av4209456/'; // VS Arashi
     $url = 'http://www.bilibili.com/video/av5751080/'; // The Yakai 20160804
     $url = 'http://www.bilibili.com/video/av2937029/index_16.html'; //
-    $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
+//     $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
+    $url = 'http://www.bilibili.com/video/av5991225/'; // flv only
 
     if ($argc >= 2) {
 
