@@ -2,7 +2,7 @@
 "name": "fujirou_bilibili",
 "hostprefix": "bilibili.com",
 "displayname": "bilibili",
-"version": "1.5",
+"version": "1.6",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",

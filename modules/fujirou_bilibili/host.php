@@ -90,19 +90,62 @@ class FujirouHostBilibili
         return Common::getFirstMatch($url, $pattern);
     }
 
+    private function is_anime_url($url)
+    {
+        if (strpos($url, '/anime/v/') > 0) {
+                return true;
+        }
+        return false;
+    }
+
+    private function get_anime_episode_id($url)
+    {
+        $pattern = '/anime\/v\/(\d+)/';
+        $episode_id = Common::getFirstMatch($url, $pattern);
+        return $episode_id;
+    }
+
+    private function get_anime_aid($original_url)
+    {
+        $episode_id = $this->get_anime_episode_id($original_url);
+        if (!$episode_id) {
+            return false;
+        }
+
+        $url = 'http://bangumi.bilibili.com/web_api/get_source';
+        $data = "episode_id=$episode_id";
+
+        $response = new Curl($url, $data, null, $this->proxy);
+        $raw = $response->get_content();
+
+        $json = json_decode($raw, true);
+        if (!$json || !isset($json['result'])) {
+            return false;
+        }
+
+        return $json['result']['aid'];
+    }
+
     private function request_json_by_url($original_url)
     {
-        $aid = $this->parse_video_id($original_url);
+        if ($this->is_anime_url($original_url)) {
+            $aid = $this->get_anime_aid($original_url);
+        } else {
+            $aid = $this->parse_video_id($original_url);
+        }
+
         if (!$aid) {
             return false;
         }
+        $this->printMsg("aid is: $aid\n");
 
         $page = $this->parse_page($original_url);
         if (!$page) {
             $page = 1;
         }
-
+        
         $appkey = $this->api_appkey;
+
         $url = "http://api.bilibili.com/view?type=json&appkey=$appkey&id=$aid&page=$page";
 
         $response = new Curl($url, null, null, $this->proxy);
@@ -266,6 +309,8 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.bilibili.com/video/av2937029/index_16.html'; //
 //     $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
     $url = 'http://www.bilibili.com/video/av5991225/'; // flv only
+
+    $url = 'http://bangumi.bilibili.com/anime/v/29004'; // Ghost in the Shell: Innocence
 
     if ($argc >= 2) {
 
