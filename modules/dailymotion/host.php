@@ -95,14 +95,14 @@ class FujirouHostDailymotion
     private function getJsonFromHtml($html)
     {
         $prefix = '{"context":';
-        $suffix = "}});\n";
+        $suffix = "}}};\n";
         $js = Common::getSubString($html, $prefix, $suffix);
         if (empty($js)) {
             Common::debug('Failed to find info json');
             return false;
         }
 
-        $pattern = '/(\{"context":.*\}\})\);/';
+        $pattern = '/(\{"context":.*\}\}\});/';
         $json_string = Common::getFirstMatch($js, $pattern);
         return json_decode($json_string, true);
     }
@@ -177,6 +177,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.dailymotion.com/playlist/x1hlho_ginji030_perfume-2/1#video=xt1mw1';
     
     $url = 'http://www.dailymotion.com/video/xn30yp_fairy-tail-bande-annonce-preview-film-2012_shortfilms'; // short, 00:31, 1.72MB
+    $url = 'http://www.dailymotion.com/video/x4xeb5l_the-amazing-world-of-gumball-the-choices-s5e6_tv';
 
     if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
         $url = $argv[1];
