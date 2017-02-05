@@ -15,8 +15,8 @@ class FujirouHostBilibili
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
         $this->api_appkey = '8e9fc618fbd41e28';
-        $this->interface_appkey = '6f90a59ac58a4123';
-        $this->bili_key = '0bfd84cc3940035173f35e6777508326';
+        $this->interface_appkey = '84956560bc028eb7';
+        $this->bili_key = '94aba54af9065f71de72f5508f1cd42e';
 
 //         $this->proxy = '124.88.67.54:843';
         $this->proxy = null;
@@ -49,6 +49,7 @@ class FujirouHostBilibili
         }
 
         // 2. get video url by json
+        //$video_url = $this->request_video_by_bilibilijj($json);
         $video_url = $this->request_video_by_json($json);
         if (!$video_url) {
             return $ret;
@@ -208,6 +209,7 @@ class FujirouHostBilibili
         $sign = $this->get_sign($params_prefix);
 
         $url = "http://interface.bilibili.com/playurl?$params_prefix&sign=$sign";
+        $this->printMsg("Get content of url: $url\n");
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
         if (!$raw) {
@@ -215,7 +217,7 @@ class FujirouHostBilibili
         }
 
         if ($this->verbose) {
-            echo "\n===== JSON begin =====\n";
+            echo "\n===== JSON begin (request_video_by_json) =====\n";
             echo json_encode($json, JSON_PRETTY_PRINT);
             echo "\n===== JSON end =====\n";
         }
@@ -235,7 +237,7 @@ class FujirouHostBilibili
         }
 
         if ($this->verbose) {
-            echo "\n===== JSON begin =====\n";
+            echo "\n===== JSON begin (find_url_in_json) =====\n";
             echo json_encode($json, JSON_PRETTY_PRINT);
             echo "\n===== JSON end =====\n";
         }
