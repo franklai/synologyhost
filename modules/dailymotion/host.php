@@ -95,14 +95,14 @@ class FujirouHostDailymotion
     private function getJsonFromHtml($html)
     {
         $prefix = '{"context":';
-        $suffix = "}}};\n";
+        $suffix = "}};\n";
         $js = Common::getSubString($html, $prefix, $suffix);
         if (empty($js)) {
             Common::debug('Failed to find info json');
             return false;
         }
 
-        $pattern = '/(\{"context":.*\}\}\});/';
+        $pattern = '/(\{"context":.*\}\});/';
         $json_string = Common::getFirstMatch($js, $pattern);
         return json_decode($json_string, true);
     }
