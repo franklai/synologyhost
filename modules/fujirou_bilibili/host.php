@@ -49,16 +49,16 @@ class FujirouHostBilibili
         }
 
         // 2. get video url by json
-        //$video_url = $this->request_video_by_bilibilijj($json);
-        $video_url = $this->request_video_by_json($json);
+        $video_url = $this->request_video_by_jijidown($json);
+        //$video_url = $this->request_video_by_json($json);
         if (!$video_url) {
             return $ret;
         }
 
         // parse extension name from video url
-        if (false !== strpos($video_url, '.mp4')) {
+        if (false !== strpos($video_url, '.mp4') || false !== strpos($video_url, '/mp4/')) {
             $video_ext = 'mp4';
-        } elseif (false !== strpos($video_url, '.flv')) {
+        } elseif (false !== strpos($video_url, '.flv') || false !== strpos($video_url, '/flv/')) {
             $video_ext = 'flv';
         } else{
             $video_ext = 'unknown';
@@ -160,11 +160,12 @@ class FujirouHostBilibili
         return json_decode($raw, true);
     }
 
-    private function request_video_by_bilibilijj($json)
+    private function request_video_by_jijidown($json)
     {
+        $url_prefix = 'http://www.jijidown.com';
         $cid = $json['cid'];
 
-        $url = "http://www.bilibilijj.com/FreeDown/$cid.php";
+        $url = "$url_prefix/FreeDown/$cid.php";
 
         $response = new Curl($url, null, null, $this->proxy);
         $raw = $response->get_content();
@@ -182,7 +183,7 @@ class FujirouHostBilibili
             return false;
         }
 
-        return "http://www.bilibilijj.com$video_path";
+        return "$url_prefix$video_path";
     }
 
     private function get_sign($params_prefix)
