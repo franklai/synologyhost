@@ -20,6 +20,22 @@ class FujirouHostBilibili
 
 //         $this->proxy = '124.88.67.54:843';
         $this->proxy = null;
+
+        $this->use_referer_proxy = false;
+        $this->proxy_ip = '192.168.1.1';
+        $this->proxy_path = '/referer_proxy/proxy.php';
+        $this->referer_user_agent = 'Synology Download Station';
+    }
+
+    private function get_url_by_referer_proxy($video_url, $referer)
+    {
+        $url = sprintf(
+            "http://%s%s?url=%s&referer=%s&user_agent=%s",
+            $this->proxy_ip, $this->proxy_path,
+            urlencode($video_url), urlencode($referer),
+            urlencode($this->referer_user_agent)
+        );
+        return $url;
     }
 
     private function printMsg($msg)
@@ -49,8 +65,8 @@ class FujirouHostBilibili
         }
 
         // 2. get video url by json
-        $video_url = $this->request_video_by_jijidown($json);
-        //$video_url = $this->request_video_by_json($json);
+        //$video_url = $this->request_video_by_jijidown($json);
+        $video_url = $this->request_video_by_json($json);
         if (!$video_url) {
             return $ret;
         }
@@ -71,10 +87,20 @@ class FujirouHostBilibili
 
         $filename = Common::sanitizePath($title) . "." . $video_ext;
 
+        if ($this->use_referer_proxy) {
+            $video_url = $this->get_url_by_referer_proxy($video_url, $url);
+        }
+
         $ret = array(
             DOWNLOAD_URL      => $video_url,
             DOWNLOAD_FILENAME => $filename
         );
+
+        if ($this->verbose) {
+            echo "== curl command begin ==\n";
+            echo "curl -v  --referer '$url' '$video_url'\n";
+            echo "== curl command end ==\n";
+        }        
 
         return $ret;
     }
