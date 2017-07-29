@@ -45,6 +45,9 @@ class FujirouHostVimeo
 
         // 2. find json with video info
         $json = $this->get_json($html);
+        if (empty($json)) {
+            return $ret;
+        }
 
         // 3. get url and title
         $videoUrl = $this->get_video_url($json);
@@ -69,8 +72,20 @@ class FujirouHostVimeo
 
     private function get_json($html)
     {
-        $pattern = '/"GET","(https:\/\/player.vimeo.com\/video\/.*?)",/';
-        $config_url = Common::getFirstMatch($html, $pattern);
+        $pattern = '/window.vimeo.clip_page_config.player = (.*?);/';
+        $json_str = Common::getFirstMatch($html, $pattern);
+        if (empty($json_str)) {
+            return false;
+        }
+//        Common::debug('json: ' . $json_str);
+
+        $player = json_decode($json_str, true);
+        if (empty($player) || !array_key_exists('config_url', $player)) {
+            Common::debug('Failed to get config_url');
+            return false;
+        }
+
+        $config_url = $player['config_url'];
         Common::debug('config-url:' . $config_url);
         if (empty($config_url)) {
             return false;
