@@ -25,6 +25,8 @@ class FujirouHostBilibili
         $this->proxy_ip = '192.168.1.1';
         $this->proxy_path = '/referer_proxy/proxy.php';
         $this->referer_user_agent = 'Synology Download Station';
+
+        $this->choose_flv_format = true;
     }
 
     private function get_url_by_referer_proxy($video_url, $referer)
@@ -226,10 +228,21 @@ class FujirouHostBilibili
         $items = [
             "appkey=$appkey",
             "cid=$cid",
-            "otype=json",
-            "quality=2",
-            "type=mp4"
+            "otype=json"
         ];
+        if ($this->choose_flv_format) {
+            $items = array_merge($items, [
+                "qn=80",
+                "quality=80",
+                "type="
+            ]);
+        } else {
+            $items = array_merge($items, [
+                "quality=2",
+                "type=mp4"
+            ]);
+        }
+        print_r($items);
 
         $params_prefix = implode('&', $items);
 
