@@ -242,7 +242,6 @@ class FujirouHostBilibili
                 "type=mp4"
             ]);
         }
-        print_r($items);
 
         $params_prefix = implode('&', $items);
 
