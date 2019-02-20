@@ -56,7 +56,7 @@ class FujirouHostDailymotion
 
         // 2. get json info of video
         $jsonUrl = sprintf(
-            "http://www.dailymotion.com/embed/video/%s",
+            "https://www.dailymotion.com/embed/video/%s",
             $videoId
         );
         Common::debug("JSON url is [$jsonUrl]");
@@ -72,7 +72,6 @@ class FujirouHostDailymotion
 
         // 3. find url from json info
         $videoUrl = $this->getVideoUrl($json);
-        Common::debug("final url: $videoUrl");
         if (empty($videoUrl)) {
             return $ret;
         }
@@ -148,7 +147,19 @@ class FujirouHostDailymotion
 
         Common::debug("Choose last url: $url");
 
-        return $url;
+        $response = new Curl($url, NULL, NULL, NULL);
+        $location = $response->get_header('Location');
+        if (empty($location)) {
+            return $url;
+        }
+
+        Common::debug("location: $location");
+        $pos = strpos($location, "#");
+        if ($pos === false) {
+            return $location;
+        }
+
+        return substr($location, 0, $pos);
     }
 
     private function getVideoTitle($json) {
@@ -178,8 +189,9 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     
     $url = 'http://www.dailymotion.com/video/xn30yp_fairy-tail-bande-annonce-preview-film-2012_shortfilms'; // short, 00:31, 1.72MB
     $url = 'http://www.dailymotion.com/video/x4xeb5l_the-amazing-world-of-gumball-the-choices-s5e6_tv';
+    $url = 'https://www.dailymotion.com/video/k5fGL5hXWOukIqsUUjz';
 
-    if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http://', 7)) {
+    if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http', 4)) {
         $url = $argv[1];
     }
 
