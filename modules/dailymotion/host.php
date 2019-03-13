@@ -85,7 +85,8 @@ class FujirouHostDailymotion
 
         $ret = array(
             DOWNLOAD_URL      => $videoUrl,
-            DOWNLOAD_FILENAME => $filename
+            DOWNLOAD_FILENAME => $filename,
+            DOWNLOAD_COOKIE   => $this->tmpCookiePath
         );
 
         return $ret;
@@ -147,7 +148,9 @@ class FujirouHostDailymotion
 
         Common::debug("Choose last url: $url");
 
-        $response = new Curl($url, NULL, NULL, NULL);
+        $hash = md5($url);
+        $this->tmpCookiePath = "/tmp/dailymotion.cookie.$hash.txt";
+        $response = new Curl($url, NULL, NULL, $this->tmpCookiePath);
         $location = $response->get_header('Location');
         if (empty($location)) {
             return $url;
@@ -190,6 +193,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.dailymotion.com/video/xn30yp_fairy-tail-bande-annonce-preview-film-2012_shortfilms'; // short, 00:31, 1.72MB
     $url = 'http://www.dailymotion.com/video/x4xeb5l_the-amazing-world-of-gumball-the-choices-s5e6_tv';
     $url = 'https://www.dailymotion.com/video/k5fGL5hXWOukIqsUUjz';
+    $url = 'https://www.dailymotion.com/video/k5i3FTWRM6JAbZt3Uq8';
 
     if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http', 4)) {
         $url = $argv[1];
