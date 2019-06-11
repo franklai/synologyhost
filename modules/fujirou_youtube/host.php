@@ -129,10 +129,12 @@ class FujirouHostYouTube
                 $encrypted = $items['s'];
                 $signature = $this->decryptSignature($encrypted);
                 if (!$signature) {
-                    $this->printMsg("\nFailed to decrypt signature, url:b " . $this->url . "\n");
+                    $this->printMsg("\nFailed to decrypt signature, url: " . $this->url . "\n");
                     return false;
                 }
                 $this->printMsg("\tFound s: $signature\n");
+            } else {
+                $this->printMsg("no signature\n");
             }
 
             $paramSignature = '';
@@ -172,6 +174,9 @@ class FujirouHostYouTube
         if (substr($url, 0, 2) === '//') {
             $url = 'https:' . $url;
         }
+        if (substr($url, 0, 4) === '/yts') {
+            $url = "https://www.youtube.com$url";
+        }
         
         $this->playerId = $this->parsePlayerUrlId($url);
         $id = $this->playerId;
@@ -184,12 +189,17 @@ class FujirouHostYouTube
 
         $pattern = '/\.sig\|\|([a-zA-Z0-9\$]+)\(/';
         $funcName = Common::getFirstMatch($html, $pattern);
+        if (!$funcName) {
+            $this->printMsg("no sig, try another pattern\n");
+            $pattern = '/c&&d\.set\([^,]+,encodeURIComponent\(([a-zA-Z0-9\$]+)\(/';
+            $funcName = Common::getFirstMatch($html, $pattern);
+        }
         $this->printMsg("''' signature function [$funcName]'''\n");
 
         $pattern = sprintf("/function %s\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
         $funcContent = Common::getFirstMatch($html, $pattern);
         if (!$funcContent) {
-            $pattern = sprintf("/,%s=function\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
+            $pattern = sprintf("/[,;]%s=function\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName));
             $funcContent = Common::getFirstMatch($html, $pattern);
             if (!$funcContent) {
                 return false;
@@ -245,7 +255,6 @@ class FujirouHostYouTube
     private function decryptSignature($encrypted)
     {
         // get player content first
-
         $decryptFuncArray = $this->getDecryptFunctionArray();
         if (!$decryptFuncArray) {
             return false;
@@ -428,6 +437,7 @@ $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 // $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
 	$url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
+    $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
 
     if ($argc >= 2) {
 
