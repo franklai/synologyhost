@@ -84,7 +84,7 @@ class FujirouHostYouTube
         );
 
         // print decrypt function if exists
-        $this-> printDecryptFunction();
+        $this->printDecryptFunction();
 
         return $ret;
     }
@@ -132,14 +132,14 @@ class FujirouHostYouTube
                     $this->printMsg("\nFailed to decrypt signature, url: " . $this->url . "\n");
                     return false;
                 }
-                $this->printMsg("\tFound s: $signature\n");
+                $this->printMsg("\tFound s: $signature, from encrypted: $encrypted\n");
             } else {
                 $this->printMsg("no signature\n");
             }
 
             $paramSignature = '';
             if (!empty($signature)) {
-                $paramSignature = '&signature=' . $signature;
+                $paramSignature = '&sig=' . $signature;
             }
 
             $videoMap[$items['itag']] = $items['url'] . $paramSignature;
@@ -160,6 +160,11 @@ class FujirouHostYouTube
     {
         $pattern = '/-([a-zA-Z0-9]+)\/html5player.js/';
         $id = Common::getFirstMatch($url, $pattern);
+
+        if (!$id) {
+            $pattern = '/player_([a-zA-Z0-9]+)/';
+            $id = Common::getFirstMatch($url, $pattern);
+        }
 
         return $id;
     }
