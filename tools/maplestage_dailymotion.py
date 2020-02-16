@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import logging
 import re
 import sys
 
@@ -26,18 +27,9 @@ def parse_page_props(line):
     return None
 
 
-def get_dailymotion(data):
-    sources = None
-    for item in data['props']:
-        if item['name'] == 'model':
-            sources = item['value']['videoSources']
-            break
-
-    if sources is None:
-        return None
-
+def get_video_urls(props):
     dailymotion = None
-    for src in sources:
+    for src in props['videoGroups']:
         if src['name'] == 'dailymotion':
             dailymotion = src
             break
@@ -54,25 +46,49 @@ def get_dailymotion(data):
     return urls
 
 
-def main(url):
+def get_all_episodes(props):
+    urls = []
+    for item in props['allEpisodes']:
+        url = 'http://maplestage.com{}'.format(item['href'])
+        urls.append(url)
+    return urls
+
+
+def get_props_by_url(url):
     resp = requests.get(url)
     html = resp.text
 
-    page_data = None
     page_props = None
     for line in html.split('\n'):
-        if line.find('var pageData') != -1:
-            page_data = parse_page_data(line)
-            continue
-        if line.find('var pageData') != -1:
+        if line.find('var pageProps ') != -1:
             page_props = parse_page_props(line)
-            continue
+            break
 
-    dailymotion = get_dailymotion(page_data)
-    print(dailymotion)
+    return page_props
 
-    #print(json.dumps(page_data, indent=2))
-    #print(json.dumps(page_props, indent=2))
+
+def get_all_episodes_by_url(url):
+    props = get_props_by_url(url)
+    return get_all_episodes(props)
+
+
+def get_video_urls_by_url(url):
+    props = get_props_by_url(url)
+    return get_video_urls(props)
+
+
+def main(url):
+    logging.info('get all episodes from url: {}'.format(url))
+    all_episodes_urls = get_all_episodes_by_url(url)
+
+    logging.info('all episode count: {}'.format(len(all_episodes_urls)))
+    urls = []
+    for episode_url in all_episodes_urls:
+        logging.info('get video urls from url: {}'.format(episode_url))
+        video_urls = get_video_urls_by_url(episode_url)
+        urls += video_urls
+
+    print("\n".join(urls))
 
 
 def usage():
@@ -80,6 +96,8 @@ def usage():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+
     if len(sys.argv) < 2:
         usage()
         sys.exit(-1)
