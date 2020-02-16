@@ -1,19 +1,21 @@
 <?php
 if (!class_exists('Common')) {
-    require('common.php');
+    require 'common.php';
 }
 if (!class_exists('Curl')) {
-    require('curl.php');
+    require 'curl.php';
 }
 
 class FujirouHostYouTube
 {
-    public function __construct($url, $username, $password, $hostInfo, $verbose=false) {
+    public function __construct($url, $username, $password, $hostInfo, $verbose = false)
+    {
         $this->url = $url;
         $this->username = $username;
         $this->password = $password;
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
+        $this->playerId = null;
     }
 
     private function printMsg($msg)
@@ -29,9 +31,10 @@ class FujirouHostYouTube
         }
     }
 
-    public function GetDownloadInfo() {
+    public function GetDownloadInfo()
+    {
         $ret = array(
-            DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST'
+            DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST',
         );
 
         $url = $this->url;
@@ -46,23 +49,27 @@ class FujirouHostYouTube
         $this->printMsg($this->playerUrl);
         $this->printMsg("\n\n");
 
-        // 2. find url_encoded_fmt_stream_map
-        $encodedMapString = $this->getMapString($html);
-        $mapString = $encodedMapString;
+        $playerConfig = $this->getPlayerConfig($html);
 
-        $adaptiveFormats = $this->getAdaptiveFmts($html);
-        $adaptiveMap = $this->parseMapString($adaptiveFormats, $html);
+        $playerResponse = json_decode($playerConfig['args']['player_response'], true);
 
-        // 3. parse map string
-        $videoMap = $this->parseMapString($mapString, $html);
+        $videoFormats = $playerResponse['streamingData']['formats'];
+        $this->printMsg("\n == video formats ==\n");
+        $this->printMsg($videoFormats);
+        $this->printMsg("\n\n");
+
+        $videoList = array();
+        foreach ($videoFormats as $item) {
+            array_push($videoList, $item['url']);
+        }
+
+        $videoMap = $this->getVideoMap($videoList);
 
         $this->printMsg("\n == url map ==\n");
         $this->printMsg($videoMap);
-        $this->printMsg("\n == adaptive ==\n");
-        $this->printMsg($adaptiveMap);
         $this->printMsg("\n\n");
 
-        $video = $this->chooseVideo($videoMap, $adaptiveMap);
+        $video = $this->chooseVideo($videoMap);
         if (empty($video)) {
             return $ret;
         }
@@ -79,8 +86,8 @@ class FujirouHostYouTube
         $filename = Common::sanitizePath($title) . "." . $videoExt;
 
         $ret = array(
-            DOWNLOAD_URL      => $videoUrl,
-            DOWNLOAD_FILENAME => $filename
+            DOWNLOAD_URL => $videoUrl,
+            DOWNLOAD_FILENAME => $filename,
         );
 
         // print decrypt function if exists
@@ -105,10 +112,8 @@ class FujirouHostYouTube
         return sprintf("%s (%s)", $title, $itagString);
     }
 
-    private function parseMapString($mapString, $html)
+    private function getVideoMap($urlList)
     {
-        $urlList = explode(',', $mapString);
-
         $videoMap = array();
 
         foreach ($urlList as $url) {
@@ -142,9 +147,18 @@ class FujirouHostYouTube
                 $paramSignature = '&sig=' . $signature;
             }
 
-            $videoMap[$items['itag']] = $items['url'] . $paramSignature;
+            $videoMap[$items['itag']] = $url . $paramSignature;
         }
         return $videoMap;
+    }
+
+    private function getPlayerConfig($html)
+    {
+        $pattern = '/ytplayer\.config = ({.*?}});/';
+        $configString = Common::getFirstMatch($html, $pattern);
+        $config = json_decode($configString, true);
+
+        return $config;
     }
 
     private function getPlayerUrl($html)
@@ -182,7 +196,7 @@ class FujirouHostYouTube
         if (substr($url, 0, 4) === '/yts') {
             $url = "https://www.youtube.com$url";
         }
-        
+
         $this->playerId = $this->parsePlayerUrlId($url);
         $id = $this->playerId;
         $this->printMsg("\n player url id: $id\n");
@@ -232,8 +246,6 @@ class FujirouHostYouTube
             $actions[] = array('type' => $type, 'parameter' => $parameter);
         }
 
-        // fixed decrypt function
-//         $funcName = 'decryptBy_vflbxes4n';
         $funcName = 'decrypt_general';
         $this->actions = $actions;
         $this->decryptFuncArray = array($this, $funcName);
@@ -301,45 +313,28 @@ class FujirouHostYouTube
 
         $this->printMsg("\n@@@ Show Decrypt Function @@@\n");
 
-        $this->printMsg(sprintf('private function decryptBy_%s($encrypted)'."\n", $this->playerId));
+        $this->printMsg(sprintf('private function decryptBy_%s($encrypted)' . "\n", $this->playerId));
         $this->printMsg('{');
-        $this->printMsg("\t".'$a = str_split($encrypted);'."\n");
+        $this->printMsg("\t" . '$a = str_split($encrypted);' . "\n");
         $this->printMsg("\n");
 
         foreach ($actions as $action) {
             $type = $action['type'];
             $parameter = $action['parameter'];
 
-            $this->printMsg("\t".sprintf('$a = $this->%s($a, %s)', $type, $parameter)."\n");
+            $this->printMsg("\t" . sprintf('$a = $this->%s($a, %s)', $type, $parameter) . "\n");
         }
 
         $this->printMsg("\n");
-        $this->printMsg("\t".'$decrypted = implode("", $a);'."\n");
-        $this->printMsg("\t".'return $decrypted;'."\n");
+        $this->printMsg("\t" . '$decrypted = implode("", $a);' . "\n");
+        $this->printMsg("\t" . 'return $decrypted;' . "\n");
         $this->printMsg("}\n");
 
         $this->printMsg("\n@@@ end decrypt function @@@\n");
 
     }
 
-    private function decryptBy_vflbxes4n($encrypted) {
-        $a = str_split($encrypted);
-
-        // swap(0, 4)
-        // slice(3)
-        // swap(0, 53)
-        // slice(2)
-        $a = $this->swap($a, 0, 4);
-        $a = array_slice($a, 3);
-        $a = $this->swap($a, 0, 53);
-        $a = array_slice($a, 2);
-
-        $decrypted = implode('', $a);
-
-        return $decrypted;
-    }
-
-    private function reverse($array, $x=0)
+    private function reverse($array, $x = 0)
     {
         $array = array_reverse($array);
 
@@ -353,7 +348,7 @@ class FujirouHostYouTube
         return $array;
     }
 
-    private function swap($array, $x, $y=0)
+    private function swap($array, $x, $y = 0)
     {
         $tmp = $array[$x];
         $array[$x] = $array[$y];
@@ -382,7 +377,8 @@ class FujirouHostYouTube
         return htmlspecialchars_decode($encodedTitle, ENT_QUOTES);
     }
 
-    private function chooseVideo($videoMap, $adaptiveMap) {
+    private function chooseVideo($videoMap, $adaptiveMap = null)
+    {
         // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
         $itagMap = array(
             "37" => "mp4", // "1080p, MP4, H.264, AAC"
@@ -390,7 +386,7 @@ class FujirouHostYouTube
             "34" => "flv", // "360p, FLV, H.264, AAC",
             "18" => "mp4", // "360p, MP4, H.264, AAC",
             "35" => "flv", // "480p, FLV, H.264, AAC",
-            "5"  => "flv" // "240p, FLV, H.263, MP3",
+            "5" => "flv", // "240p, FLV, H.263, MP3",
         );
 
         // http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
@@ -404,25 +400,25 @@ class FujirouHostYouTube
             "140" => "mp4", // DASH audio, AAC, 128
             "139" => "mp4", // DASH audio, AAC, 48
             "172" => "webm", // DASH audio, Vorbis, 192
-            "171" => "webm" // DASH audio, Vorbis, 128
+            "171" => "webm", // DASH audio, Vorbis, 128
         );
 
         if (empty($videoMap)) {
-            return FALSE;
+            return false;
         }
 
         foreach ($itagMap as $itag => $ext) {
             if (array_key_exists($itag, $videoMap)) {
                 return array(
                     "link" => $videoMap[$itag],
-                    "ext"  => $ext
+                    "ext" => $ext,
                 );
             }
         }
 
         return array(
             "link" => reset($videoMap),
-            "ext"  => "flv"
+            "ext" => "flv",
         );
     }
 }
@@ -431,16 +427,16 @@ class FujirouHostYouTube
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostYouTube';
 //    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
-//     $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
-//    $url = 'http://www.youtube.com/watch?v=RY35O02Fg8M';
+    //     $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
+    //    $url = 'http://www.youtube.com/watch?v=RY35O02Fg8M';
     $url = 'http://www.youtube.com/watch?v=iul4SBlHIf8';
-$url = 'http://www.youtube.com/watch?v=FXg4LXsg14s';
-$url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
-$url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
+    $url = 'http://www.youtube.com/watch?v=FXg4LXsg14s';
+    $url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
+    $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 // $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
-// $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
-// $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
-	$url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
+    // $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
+    // $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
+    $url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
 
@@ -462,4 +458,3 @@ $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
 }
 
 // vim: expandtab ts=4
-?>
