@@ -131,9 +131,26 @@ class FujirouHostDailymotion
         return $id;
     }
 
+    private function findVideoFromM3u8($url)
+    {
+        $response = new Curl($url);
+        $m3u8 = $response->get_content();
+
+        $pattern = '/PROGRESSIVE-URI="(http.*?\.mp4).*?"/';
+        $matches = common::getAllFirstMatch($m3u8, $pattern);
+
+        $length = count($matches);
+        if ($length > 0) {
+            // choose last video url, usually best video quality
+            return $matches[$length - 1];
+        }
+        return null;
+    }
+
     private function getVideoUrl($json)
     {
         $url = null;
+        $type = null;
 
         if (!array_key_exists('metadata', $json)) {
             return $url;
@@ -153,6 +170,15 @@ class FujirouHostDailymotion
                 $type = $item['type'];
                 $url = $item['url'];
                 Common::debug("\ttype [$type], url: $url");
+            }
+        }
+
+        if ($type === 'application/x-mpegURL') {
+            $url_from_m3u8 = $this->findVideoFromM3u8($url);
+            if ($url_from_m3u8) {
+                $url = $url_from_m3u8;
+                common::debug("find video url: $url from m3u8");
+                return $url;
             }
         }
 
