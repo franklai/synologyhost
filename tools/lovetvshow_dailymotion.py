@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 
 import requests
 
+
 #  http://c20v1.lovetvshow.info/2020/01/cn200122-list.html
 #  三生三世枕上書
 
@@ -26,7 +27,7 @@ def get_all_episodes_by_url(url):
     episode_urls = []
     for item in matches:
         episode_url = item[0]
-        if episode_url.find('http:') != 0:
+        if episode_url.find("http:") != 0:
             episode_url = urljoin(url, episode_url)
         episode_urls.append(episode_url)
 
@@ -40,27 +41,25 @@ def get_video_urls_by_url(url):
 
     pattern = r'<div id="video_ids" style="display:none;">(.+?)</div>'
     matches = re.findall(pattern, html)
-    video_urls = [
-        'http://www.dailymotion.com/video/{}'.format(x) for x in matches
-    ]
+    video_urls = ["http://www.dailymotion.com/video/{}".format(x) for x in matches]
 
     pattern = r'<div id="video_title" style="display:none;">(.+?)</div>'
     matched = re.search(pattern, html)
     if matched:
-        logging.info('page title: {}'.format(matched.group(1)))
-        logging.info('\turl: {}'.format(video_urls[0]))
+        logging.info("page title: {}".format(matched.group(1)))
+        logging.info("\turl: {}".format(video_urls[0]))
 
     return video_urls
 
 
 def main(url):
-    logging.info('get all episodes from url: {}'.format(url))
+    logging.info("get all episodes from url: {}".format(url))
     all_episodes_urls = get_all_episodes_by_url(url)
 
-    logging.info('all episode count: {}'.format(len(all_episodes_urls)))
+    logging.info("all episode count: {}".format(len(all_episodes_urls)))
     urls = []
     for episode_url in all_episodes_urls:
-        logging.info('get video urls from url: {}'.format(episode_url))
+        logging.info("get video urls from url: {}".format(episode_url))
         video_urls = get_video_urls_by_url(episode_url)
         urls = video_urls + urls
 
@@ -68,10 +67,10 @@ def main(url):
 
 
 def usage():
-    print('Usage: {} [url]'.format(sys.argv[0]))
+    print("Usage: {} [url]".format(sys.argv[0]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     if len(sys.argv) < 2:
