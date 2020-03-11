@@ -7,7 +7,7 @@ class Curl
 {
 	private $response = NULL;
 
-	public function __construct($url, $data=NULL, $headers=NULL, $proxy=NULL, $cookiePath='tmp_cookie.txt')
+	public function __construct($url, $data=NULL, $headers=NULL, $proxy=NULL, $cookiePath='tmp_cookie.txt', $use_head=false)
 	{
 		$method = 'get';
 
@@ -36,6 +36,7 @@ class Curl
 		}
 
 		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_NOBODY, $use_head);
 //  curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
 		curl_setopt($ch, CURLOPT_ENCODING, ''); // Accept-Encoding. Empty sent all supported encoding types
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE); // Do not follow any "Location: " header
@@ -46,7 +47,9 @@ class Curl
 		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiePath); // set load cookie file
 		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiePath); // set save cookie file
 		curl_setopt($ch, CURLOPT_URL, $url); // set url
-		if ('get' == $method) {
+		if ($use_head) {
+			// skip
+		} else if ('get' == $method) {
 			curl_setopt($ch, CURLOPT_HTTPGET, TRUE);
 		} else if ('post' == $method) {
 			curl_setopt($ch, CURLOPT_POST, TRUE);
