@@ -1,14 +1,15 @@
 <?php
 if (!class_exists('Common')) {
-    require('common.php');
+    require 'common.php';
 }
 if (!class_exists('Curl')) {
-    require('curl.php');
+    require 'curl.php';
 }
 
 class FujirouHostBilibili
 {
-    public function __construct($url, $username, $password, $hostInfo, $verbose=false) {
+    public function __construct($url, $username, $password, $hostInfo, $verbose = false)
+    {
         $this->url = $url;
         $this->username = $username;
         $this->password = $password;
@@ -53,9 +54,10 @@ class FujirouHostBilibili
         }
     }
 
-    public function GetDownloadInfo() {
+    public function GetDownloadInfo()
+    {
         $ret = array(
-            DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST'
+            DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST',
         );
 
         $url = $this->url;
@@ -67,7 +69,6 @@ class FujirouHostBilibili
         }
 
         // 2. get video url by json
-        //$video_url = $this->request_video_by_jijidown($json);
         $video_url = $this->request_video_by_json($json);
         if (!$video_url) {
             return $ret;
@@ -78,7 +79,7 @@ class FujirouHostBilibili
             $video_ext = 'mp4';
         } elseif (false !== strpos($video_url, '.flv') || false !== strpos($video_url, '/flv/')) {
             $video_ext = 'flv';
-        } else{
+        } else {
             $video_ext = 'unknown';
         }
 
@@ -94,21 +95,21 @@ class FujirouHostBilibili
         }
 
         $ret = array(
-            DOWNLOAD_URL      => $video_url,
+            DOWNLOAD_URL => $video_url,
             DOWNLOAD_FILENAME => $filename,
-            "referer"         => $url
+            "referer" => $url,
         );
 
         if ($this->verbose) {
             echo "== curl command begin ==\n";
             echo "curl -v  --referer '$url' '$video_url'\n";
             echo "== curl command end ==\n";
-        }        
+        }
 
         return $ret;
     }
 
-    private function parse_video_id($url)
+    private function get_aid_from_url($url)
     {
         $pattern = '/video\/av(\d+)/';
         return Common::getFirstMatch($url, $pattern);
@@ -123,7 +124,15 @@ class FujirouHostBilibili
     private function is_anime_url($url)
     {
         if (strpos($url, '/anime/v/') > 0) {
-                return true;
+            return true;
+        }
+        return false;
+    }
+
+    private function is_bvid_url($url)
+    {
+        if (strpos($url, '/video/BV') > 0) {
+            return true;
         }
         return false;
     }
@@ -156,15 +165,36 @@ class FujirouHostBilibili
         return $json['result']['aid'];
     }
 
-    private function request_json_by_url($original_url)
+    private function get_aid($original_url)
     {
-        if ($this->is_anime_url($original_url)) {
+        if ($this->is_bvid_url($original_url)) {
+            $aid = $this->get_aid_from_bvid_url($original_url);
+        } elseif ($this->is_anime_url($original_url)) {
             $aid = $this->get_anime_aid($original_url);
         } else {
-            $aid = $this->parse_video_id($original_url);
+            $aid = $this->get_aid_from_url($original_url);
         }
 
+        return $aid;
+    }
+
+    private function get_aid_from_bvid_url($original_url)
+    {
+        $response = new Curl($original_url, null, null, $this->proxy);
+        $html = $response->get_content();
+        if (!$html) {
+            return null;
+        }
+
+        $pattern = '/"aid":(\d+),/';
+        return Common::getFirstMatch($html, $pattern);
+    }
+
+    private function request_json_by_url($original_url)
+    {
+        $aid = $this->get_aid($original_url);
         if (!$aid) {
+            $this->printMsg("Failed to get aid\n");
             return false;
         }
         $this->printMsg("aid is: $aid\n");
@@ -173,7 +203,7 @@ class FujirouHostBilibili
         if (!$page) {
             $page = 1;
         }
-        
+
         $appkey = $this->api_appkey;
 
         $url = "https://api.bilibili.com/view?type=json&appkey=$appkey&id=$aid&page=$page";
@@ -187,32 +217,6 @@ class FujirouHostBilibili
         }
 
         return json_decode($raw, true);
-    }
-
-    private function request_video_by_jijidown($json)
-    {
-        $url_prefix = 'http://www.jijidown.com';
-        $cid = $json['cid'];
-
-        $url = "$url_prefix/FreeDown/$cid.php";
-
-        $response = new Curl($url, null, null, $this->proxy);
-        $raw = $response->get_content();
-        $this->printMsg("Get content of url: $url\n");
-
-        if (!$raw) {
-            $this->printMsg("Failed to curl $url\n");
-            return false;
-        }
-
-        $pattern = '/"(\/FreeDown\/DownLoad\/[0-9]+\/[mp4flv]{3}\/[0-9]+\.[A-Z0-9]+)"/';
-        $video_path = Common::getFirstMatch($raw, $pattern);
-        if (!$video_path) {
-            $this->printMsg("Failed to find pattern $pattern");
-            return false;
-        }
-
-        return "$url_prefix$video_path";
     }
 
     private function get_sign($params_prefix)
@@ -229,18 +233,18 @@ class FujirouHostBilibili
         $items = [
             "appkey=$appkey",
             "cid=$cid",
-            "otype=json"
+            "otype=json",
         ];
         if ($this->choose_flv_format) {
             $items = array_merge($items, [
                 "qn=80",
                 "quality=80",
-                "type="
+                "type=",
             ]);
         } else {
             $items = array_merge($items, [
                 "quality=2",
-                "type=mp4"
+                "type=mp4",
             ]);
         }
 
@@ -295,7 +299,7 @@ class FujirouHostBilibili
         }
 
         $url = Common::getSubString($raw, $prefix, $suffix, false);
-        
+
         return $url;
     }
 
@@ -343,17 +347,18 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.bilibili.com/video/av710996/'; // Trick S1E01
     $url = 'http://www.bilibili.com/video/av710996/index_2.html'; // Trick S1E02
     $url = 'http://www.bilibili.com/video/av710996/index_46.html'; // Trick 2010 Movie
-//     $url = 'http://www.bilibili.com/video/av4775518/';
+    //     $url = 'http://www.bilibili.com/video/av4775518/';
     $url = 'http://www.bilibili.com/video/av4782176/'; // mayoiga E09 bilibili official
     $url = 'http://www.bilibili.com/video/av4313184/';
     $url = 'http://www.bilibili.com/video/av4209456/'; // VS Arashi
     $url = 'http://www.bilibili.com/video/av5751080/'; // The Yakai 20160804
     $url = 'http://www.bilibili.com/video/av2937029/index_16.html'; //
-//     $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
+    //     $url = 'http://www.bilibili.com/mobile/video/av3397162.html'; // mobile page
     $url = 'http://www.bilibili.com/video/av5991225/'; // flv only
 
     $url = 'http://bangumi.bilibili.com/anime/v/29004'; // Ghost in the Shell: Innocence
     $url = 'https://www.bilibili.com/video/av28641430'; // arashi ni shiyagare 180804
+    $url = 'https://www.bilibili.com/video/BV12K4y1C7QU'; // arashi ni shiyagare 200328
 
     if ($argc >= 2) {
 
@@ -373,4 +378,3 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
 }
 
 // vim: expandtab ts=4
-?>
