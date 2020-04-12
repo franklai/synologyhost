@@ -1,0 +1,11 @@
+{
+    "autoload": {
+        "classmap": [
+            "modules/fujirou_bilibili"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8",
+        "phpunit/php-invoker": "^2.0"
+    }
+}
