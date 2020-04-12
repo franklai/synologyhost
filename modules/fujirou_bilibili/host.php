@@ -97,7 +97,7 @@ class FujirouHostBilibili
         $ret = array(
             DOWNLOAD_URL => $video_url,
             DOWNLOAD_FILENAME => $filename,
-            "referer" => $url,
+            'referer' => $url,
         );
 
         if ($this->verbose) {
@@ -132,6 +132,14 @@ class FujirouHostBilibili
     private function is_bvid_url($url)
     {
         if (strpos($url, '/video/BV') > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private function is_aid_url($url)
+    {
+        if (strpos($url, '/video/av') > 0) {
             return true;
         }
         return false;
@@ -188,6 +196,44 @@ class FujirouHostBilibili
 
         $pattern = '/"aid":(\d+),/';
         return Common::getFirstMatch($html, $pattern);
+    }
+
+    private function get_cid($original_url)
+    {
+        if ($this->is_bvid_url($original_url)) {
+            return $this->get_cid_from_bvid_url($original_url);
+        } elseif ($this->is_aid_url($original_url)) {
+            return $this->get_cid_from_aid_url($original_url);
+        }
+        return null;
+    }
+
+    private function get_cid_from_aid_url($original_url)
+    {
+        $aid = $this->get_aid_from_url($original_url);
+        if ($aid) {
+            return null;
+        }
+
+        $page = $this->parse_page($original_url);
+        if (!$page) {
+            $page = 1;
+        }
+
+        $appkey = $this->api_appkey;
+
+        $url = "https://api.bilibili.com/view?type=json&appkey=$appkey&id=$aid&page=$page";
+
+        $response = new Curl($url, null, null, $this->proxy);
+        $raw = $response->get_content();
+        $this->printMsg("Get content of url: $url\n");
+
+        if (!$raw) {
+            return false;
+        }
+
+        $obj = json_decode($raw, true);
+        return $obj['cid'];
     }
 
     private function request_json_by_url($original_url)
@@ -287,57 +333,6 @@ class FujirouHostBilibili
         }
 
         return $json['durl'][0]['url'];
-    }
-
-    private function find_url_in_xml($raw)
-    {
-        $prefix = '<url><![CDATA[';
-        $suffix = ']]></url>';
-
-        if (false === strpos($raw, '<durl>')) {
-            return false;
-        }
-
-        $url = Common::getSubString($raw, $prefix, $suffix, false);
-
-        return $url;
-    }
-
-    private function find_url_in_xml_using_dom($raw)
-    {
-        $doc = new DOMDocument();
-        $doc->loadXML($raw);
-
-        $xpath = new DOMXpath($doc);
-
-        $elements = $xpath->query('durl/backup_url/url');
-        if (!$elements) {
-            $elements = $xpath->query('durl/url');
-        }
-
-        var_dump($elements);
-        if (!is_null($elements)) {
-            foreach ($elements as $elem) {
-                return $elem->nodeValue;
-            }
-        }
-
-        return '';
-    }
-
-    private function find_url_in_xml_using_simplexml($raw)
-    {
-        $elem = simplexml_load_string($raw);
-        if (!$elem) {
-            return '';
-        }
-
-        $result = $elem->xpath('durl/backup_url/url');
-        if (!$result) {
-            $result = $elem->xpath('durl/url');
-        }
-        $video_url = $result[0];
-        return '' . $video_url;
     }
 }
 
