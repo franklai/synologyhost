@@ -43,7 +43,7 @@ class FujirouHostBilibili
         try {
             return $this->get();
         } catch (Exception $e) {
-            $this->printMsg("Exception, ", $e->getMessage());
+            $this->printMsg("Exception, " . $e->getMessage());
             return array(
                 DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST',
             );
@@ -120,6 +120,12 @@ class FujirouHostBilibili
         return null;
     }
 
+    private function get_epid_from_url($url)
+    {
+        $pattern = '/bangumi\/play\/ep(\d+)/';
+        return Common::getFirstMatch($url, $pattern);
+    }
+
     private function parse_page($url)
     {
         $pattern = '/index_(\d+)\.html/';
@@ -129,14 +135,6 @@ class FujirouHostBilibili
     private function is_anime_url($url)
     {
         if (strpos($url, '/anime/v/') > 0) {
-            return true;
-        }
-        return false;
-    }
-
-    private function is_bangumi_url($url)
-    {
-        if (strpos($url, '/bangumi/play/') > 0) {
             return true;
         }
         return false;
@@ -153,6 +151,14 @@ class FujirouHostBilibili
     private function is_bvid_url($url)
     {
         if (strpos($url, '/video/BV') > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private function is_bangumi_url($url)
+    {
+        if (strpos($url, '/bangumi/play/') > 0) {
             return true;
         }
         return false;
@@ -196,6 +202,10 @@ class FujirouHostBilibili
             $id = $this->get_aid_from_url($original_url);
             $params = "aid=$id";
             $this->printMsg("aid is: $id\n");
+        } elseif ($this->is_bangumi_url($original_url)) {
+            $id = $this->request_bvid_from_url($original_url);
+            $params = "bvid=$id";
+            $this->printMsg("bangumi, get bvid is: $id\n");
         } else {
             throw new Exception("Failed to find video id of url $original_url");
         }
@@ -247,6 +257,20 @@ class FujirouHostBilibili
         return $video_url;
     }
 
+    private function request_bvid_from_url($url)
+    {
+        $response = new Curl($url);
+        $raw = $response->get_content();
+        if (!$raw) {
+            throw new Exception("Failed to get content of url $url");
+        }
+
+        $epid = $this->get_epid_from_url($url);
+
+        $bvid = $this->find_bvid_in_html($raw, $epid);
+        return $bvid;
+    }
+
     private function find_url_in_json($raw)
     {
         $json = json_decode($raw, true);
@@ -262,6 +286,18 @@ class FujirouHostBilibili
 
         $data = $json['data'];
         return $data['durl'][0]['url'];
+    }
+
+    private function find_bvid_in_html($raw, $epid)
+    {
+        if ($epid) {
+            $pattern = "/\"id\":$epid,.*?\"bvid\":\"(BV[0-9a-zA-Z]+)\"/";
+        } else {
+            // get first bvid when no ep id
+            $pattern = "/\"bvid\":\"(BV[0-9a-zA-Z]+)\"/";
+        }
+
+        return Common::getFirstMatch($raw, $pattern);
     }
 
     private function get_page_data($json, $page)
