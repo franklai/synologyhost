@@ -3,12 +3,6 @@ declare (strict_types = 1);
 
 use PHPUnit\Framework\TestCase;
 
-$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
-foreach ($defines as $key) {
-    if (!defined($key)) {
-        define($key, $key);
-    }
-}
 
 class HostsTestCase extends TestCase
 {
