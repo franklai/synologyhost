@@ -22,8 +22,7 @@ class FujirouHostBilibili
         $this->password = $password;
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
-
-        $this->choose_flv_format = true;
+        $this->cid = null;
     }
 
     private function printMsg($msg)
@@ -51,15 +50,23 @@ class FujirouHostBilibili
         }
     }
 
+    // for test
+    public function get_cid()
+    {
+        return $this->cid;
+    }
+
     private function get()
     {
         $url = $this->url;
 
-        // 1. get bilibili json by url
+        // get bilibili json by url
         $json = $this->request_json_by_url($url);
 
-        // 2. get video url by json
-        $video_url = $this->request_video_by_json($json);
+        $page = $this->get_page_from_url($url);
+
+        // get video url by json
+        $video_url = $this->request_video_by_json($json, $page);
 
         // parse extension name from video url
         if (false !== strpos($video_url, '.mp4') || false !== strpos($video_url, '/mp4/')) {
@@ -71,7 +78,7 @@ class FujirouHostBilibili
         }
 
         $data = $json['data'];
-        $title = $data['title'];
+        $title = $this->get_title_by_json_and_page($json, $page);
         $filename = Common::sanitizePath($title) . "." . $video_ext;
 
         $ret = array(
@@ -101,6 +108,16 @@ class FujirouHostBilibili
     {
         $pattern = '/video\/(BV[0-9a-zA-Z]+)/';
         return Common::getFirstMatch($url, $pattern);
+    }
+
+    private function get_page_from_url($url)
+    {
+        $pattern = '/p=(\d+)/';
+        $value = Common::getFirstMatch($url, $pattern);
+        if ($value) {
+            return intval($value, 10);
+        }
+        return null;
     }
 
     private function parse_page($url)
@@ -196,17 +213,18 @@ class FujirouHostBilibili
         return json_decode($raw, true);
     }
 
-    private function get_sign($params_prefix)
-    {
-        $bili_key = $this->bili_key;
-        return md5("$params_prefix$bili_key");
-    }
-
-    private function request_video_by_json($json)
+    private function request_video_by_json($json, $page)
     {
         $data = $json['data'];
         $bvid = $data['bvid'];
         $cid = $data['cid'];
+
+        $page_data = $this->get_page_data($json, $page);
+        if ($page_data) {
+            $cid = $page_data['cid'];
+        }
+
+        $this->cid = $cid;
         $params = "cid=$cid&bvid=$bvid";
 
         $url = "https://api.bilibili.com/x/player/playurl?$params";
@@ -244,6 +262,36 @@ class FujirouHostBilibili
 
         $data = $json['data'];
         return $data['durl'][0]['url'];
+    }
+
+    private function get_page_data($json, $page)
+    {
+        $data = $json['data'];
+        $pages = $data['pages'];
+        $title = $data['title'];
+
+        if (is_numeric($page) && $page > 0) {
+            foreach ($pages as $item) {
+                if ($item['page'] === $page) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function get_title_by_json_and_page($json, $page)
+    {
+        $data = $json['data'];
+        $title = $data['title'];
+
+        $page_data = $this->get_page_data($json, $page);
+        if ($page_data) {
+            $title .= " - " . html_entity_decode($page_data['part']);
+        }
+
+        return $title;
     }
 }
 
