@@ -6,13 +6,6 @@ if (!class_exists('Curl')) {
     require 'curl.php';
 }
 
-$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
-foreach ($defines as $key) {
-    if (!defined($key)) {
-        define($key, $key);
-    }
-}
-
 class FujirouHostBilibili
 {
     public function __construct($url, $username, $password, $hostInfo, $verbose = false)
