@@ -3,6 +3,12 @@ declare (strict_types = 1);
 
 use PHPUnit\Framework\TestCase;
 
+$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
+foreach ($defines as $key) {
+    if (!defined($key)) {
+        define($key, $key);
+    }
+}
 
 class HostsTestCase extends TestCase
 {
@@ -27,13 +33,15 @@ class HostsTestCase extends TestCase
         return $info['DOWNLOAD_FILENAME'];
     }
 
-    protected function get($url, $filename_answer, $cid_answer)
+    protected function get($url, $filename_answer, $cid_answer = null)
     {
         $obj = $this->get_obj($url);
         $filename = $this->get_filename($obj);
         $this->assertEquals($filename, $filename_answer);
 
-        $cid = $obj->get_cid();
-        $this->assertEquals($cid, $cid_answer);
+        if ($cid_answer) {
+            $cid = $obj->get_cid();
+            $this->assertEquals($cid, $cid_answer);
+        }
     }
 }

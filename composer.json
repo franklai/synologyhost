@@ -1,7 +1,8 @@
 {
     "autoload": {
         "classmap": [
-            "modules/fujirou_bilibili"
+            "modules/fujirou_bilibili",
+            "modules/fujirou_youtube"
         ]
     },
     "require-dev": {

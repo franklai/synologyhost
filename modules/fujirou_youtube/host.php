@@ -15,7 +15,8 @@ class FujirouHostYouTube
         $this->password = $password;
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
-        $this->playerId = null;
+        $this->decryptFuncArray = null;
+        $this->actions = null;
     }
 
     private function printMsg($msg)
@@ -71,9 +72,6 @@ class FujirouHostYouTube
             DOWNLOAD_FILENAME => $filename,
         );
 
-        // print decrypt function if exists
-        $this->printDecryptFunction();
-
         return $ret;
     }
 
@@ -86,6 +84,7 @@ class FujirouHostYouTube
 
         $playerConfig = $this->getPlayerConfig($html);
         if (!$playerConfig) {
+            $this->printMsg("Failed to get player config\n");
             return null;
         }
         $playerResponse = json_decode($playerConfig['args']['player_response'], true);
@@ -100,12 +99,20 @@ class FujirouHostYouTube
         $this->printMsg($videoFormats);
         $this->printMsg("\n\n");
 
-        $videoList = array();
+        $urlList = array();
+        $cipherList = array();
         foreach ($videoFormats as $item) {
-            array_push($videoList, $item['cipher']);
+            if (array_key_exists('url', $item)) {
+                array_push($urlList, $item['url']);
+            } elseif (array_key_exists('cipher', $item)) {
+                $url = $this->getUrlByCipher($item['cipher']);
+                array_push($urlList, $url);
+            } else {
+                $this->pringMsg("Faield to get url or cipher in item\n");
+            }
         }
 
-        return $this->getVideoMap($videoList);
+        return $this->getVideoMapByUrlList($urlList);
     }
 
     private function getVideoMapForAgeGate($html)
@@ -168,12 +175,41 @@ class FujirouHostYouTube
         return sprintf("%s (%s)", $title, $itagString);
     }
 
-    private function getVideoMap($cipherList)
+    private function getUrlByCipher($cipher)
     {
-        $videoMap = array();
+        parse_str($cipher, $items);
+        $url = $items['url'];
 
+        $signature = '';
+        if (array_key_exists('sig', $items)) {
+            $signature = $items['sig'];
+            $this->printMsg("\tFound sig: $signature\n");
+        } elseif (array_key_exists('s', $items)) {
+            // encrypted signature
+            $encrypted = $items['s'];
+            $signature = $this->decryptSignature($encrypted);
+            if (!$signature) {
+                $this->printMsg("\nFailed to decrypt signature, url: " . $this->url . "\n");
+                return false;
+            }
+            $this->printMsg("\tFound s: $signature, from encrypted: $encrypted\n");
+        } else {
+            $this->printMsg("no signature\n");
+        }
+
+        $paramSignature = '';
+        if (!empty($signature)) {
+            $paramSignature = '&sig=' . $signature;
+        }
+
+        $url .= $paramSignature;
+        return $url;
+    }
+
+    private function getVideoMapByCipherList($cipherList)
+    {
+        $urlList = array();
         foreach ($cipherList as $cipher) {
-            $this->printMsg("cipher: $cipher\n");
             if (empty($cipher)) {
                 continue;
             }
@@ -181,9 +217,6 @@ class FujirouHostYouTube
             parse_str($cipher, $items);
             $this->printMsg($items);
             $url = $items['url'];
-
-            parse_str($url, $queries);
-            $itag = $queries['itag'];
 
             $signature = '';
             if (array_key_exists('sig', $items)) {
@@ -207,7 +240,18 @@ class FujirouHostYouTube
                 $paramSignature = '&sig=' . $signature;
             }
 
-            $videoMap[$itag] = $url . $paramSignature;
+            $urlList[] = $url . $paramSignature;
+        }
+        return $this->getvideoMapByUrlList($urlList);
+    }
+
+    private function getVideoMapByUrlList($urlList)
+    {
+        foreach ($urlList as $url) {
+            parse_str($url, $queries);
+            $itag = $queries['itag'];
+
+            $videoMap[$itag] = $url;
         }
         return $videoMap;
     }
@@ -223,19 +267,20 @@ class FujirouHostYouTube
 
     private function getPlayerUrl($html)
     {
-        $pattern = '/"(\/yts\/jsbin\/player.+?base.js)"/';
-        // $pattern = '/"assets":.+?"js":\s*("[^"]+")/';
-        $url = Common::getFirstMatch($html, $pattern);
+        $patterns = [
+            '/"(\/.+?\/player_ias.+?\/base\.js)"/',
+            '/"(\/yts\/jsbin\/player.+?base.js)"/',
+            // '/"assets":.+?"js":\s*("[^"]+")/',
+        ];
 
-        return $url;
-    }
+        foreach ($patterns as $pattern) {
+            $url = Common::getFirstMatch($html, $pattern);
+            if ($url) {
+                return $url;
+            }
+        }
 
-    private function parsePlayerUrlId($url)
-    {
-        $pattern = '/player_([a-zA-Z0-9-]+)/';
-        $id = Common::getFirstMatch($url, $pattern);
-
-        return $id;
+        return null;
     }
 
     private function getDecryptFunctionArray()
@@ -248,13 +293,11 @@ class FujirouHostYouTube
         if (substr($url, 0, 2) === '//') {
             $url = 'https:' . $url;
         }
-        if (substr($url, 0, 4) === '/yts') {
+        if (substr($url, 0, 1) === '/') {
             $url = "https://www.youtube.com$url";
         }
 
-        $this->playerId = $this->parsePlayerUrlId($url);
-        $id = $this->playerId;
-        $this->printMsg("\n player url id: $id\n");
+        $this->printMsg("\n player url: $url\n");
 
         $response = new Curl($url);
         $html = $response->get_content();
@@ -375,37 +418,6 @@ class FujirouHostYouTube
         return $decrypted;
     }
 
-    private function printDecryptFunction()
-    {
-        if (!$this->playerId || !$this->actions) {
-            return;
-        }
-
-        $actions = $this->actions;
-
-        $this->printMsg("\n@@@ Show Decrypt Function @@@\n");
-
-        $this->printMsg(sprintf('private function decryptBy_%s($encrypted)' . "\n", $this->playerId));
-        $this->printMsg('{');
-        $this->printMsg("\t" . '$a = str_split($encrypted);' . "\n");
-        $this->printMsg("\n");
-
-        foreach ($actions as $action) {
-            $type = $action['type'];
-            $parameter = $action['parameter'];
-
-            $this->printMsg("\t" . sprintf('$a = $this->%s($a, %s)', $type, $parameter) . "\n");
-        }
-
-        $this->printMsg("\n");
-        $this->printMsg("\t" . '$decrypted = implode("", $a);' . "\n");
-        $this->printMsg("\t" . 'return $decrypted;' . "\n");
-        $this->printMsg("}\n");
-
-        $this->printMsg("\n@@@ end decrypt function @@@\n");
-
-    }
-
     private function reverse($array, $x = 0)
     {
         $array = array_reverse($array);
@@ -512,6 +524,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
     // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
+    $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
 
     if ($argc >= 2) {
 
