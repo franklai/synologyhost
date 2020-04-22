@@ -25,23 +25,23 @@ final class FujirouBilibiliTest extends HostsTestCase
         $this->get($url, $filename, $cid);
     }
 
-    public function testBangumiEp()
-    {
-        $url = 'https://www.bilibili.com/bangumi/play/ep88882';
-        $filename = '【4月】迷家 10【独家正版】.flv';
-        $cid = '10732315';
+    // public function testBangumiEp()
+    // {
+    //     $url = 'https://www.bilibili.com/bangumi/play/ep88882';
+    //     $filename = '【4月】迷家 10【独家正版】.flv';
+    //     $cid = '10732315';
 
-        $this->get($url, $filename, $cid);
-    }
+    //     $this->get($url, $filename, $cid);
+    // }
 
-    public function testBangumiSs()
-    {
-        $url = 'https://www.bilibili.com/bangumi/play/ss33092';
-        $filename = '【4月】阿爾蒂（僅限台灣地區）01.flv';
-        $cid = '173509498';
+    // public function testBangumiSs()
+    // {
+    //     $url = 'https://www.bilibili.com/bangumi/play/ss33092';
+    //     $filename = '【4月】阿爾蒂（僅限台灣地區）01.flv';
+    //     $cid = '173509498';
 
-        $this->get($url, $filename, $cid);
-    }
+    //     $this->get($url, $filename, $cid);
+    // }
 
     public function testGetPages()
     {
