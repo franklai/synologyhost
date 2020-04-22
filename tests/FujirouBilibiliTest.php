@@ -25,15 +25,6 @@ final class FujirouBilibiliTest extends HostsTestCase
         $this->get($url, $filename, $cid);
     }
 
-    public function testGetPages()
-    {
-        $url = 'https://www.bilibili.com/video/BV1vs411k7tn?p=11';
-        $filename = '「Thunderbolt Fantasy 东离剑游记」原声集专辑 - 11.Kguy&kill don_t 生kiLL.mp4';
-        $cid = '9726377';
-
-        $this->get($url, $filename, $cid);
-    }
-
     public function testGetBangumiWithEp()
     {
         $url = 'https://www.bilibili.com/bangumi/play/ep88882';
@@ -48,6 +39,15 @@ final class FujirouBilibiliTest extends HostsTestCase
         $url = 'https://www.bilibili.com/bangumi/play/ss33092';
         $filename = '【4月】阿爾蒂（僅限台灣地區）01.flv';
         $cid = '173509498';
+
+        $this->get($url, $filename, $cid);
+    }
+
+    public function testGetPages()
+    {
+        $url = 'https://www.bilibili.com/video/BV1vs411k7tn?p=11';
+        $filename = '「Thunderbolt Fantasy 东离剑游记」原声集专辑 - 11.Kguy&kill don_t 生kiLL.mp4';
+        $cid = '9726377';
 
         $this->get($url, $filename, $cid);
     }
