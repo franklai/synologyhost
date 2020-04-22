@@ -25,7 +25,7 @@ final class FujirouBilibiliTest extends HostsTestCase
         $this->get($url, $filename, $cid);
     }
 
-    public function testGetBangumiWithEp()
+    public function testBangumiEp()
     {
         $url = 'https://www.bilibili.com/bangumi/play/ep88882';
         $filename = '【4月】迷家 10【独家正版】.flv';
@@ -34,7 +34,7 @@ final class FujirouBilibiliTest extends HostsTestCase
         $this->get($url, $filename, $cid);
     }
 
-    public function testGetBangumiWithSs()
+    public function testBangumiSs()
     {
         $url = 'https://www.bilibili.com/bangumi/play/ss33092';
         $filename = '【4月】阿爾蒂（僅限台灣地區）01.flv';
