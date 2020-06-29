@@ -108,7 +108,7 @@ class FujirouHostYouTube
                 $url = $this->getUrlByCipher($item['cipher']);
                 array_push($urlList, $url);
             } else {
-                $this->pringMsg("Faield to get url or cipher in item\n");
+                $this->printMsg("Faield to get url or cipher in item\n");
             }
         }
 
@@ -524,10 +524,9 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
     // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
-    $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
+    // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
 
     if ($argc >= 2) {
-
         $argument = $argv[1];
         if (substr(strtolower($argument), 0, 4) === 'http') {
             $url = $argument;
