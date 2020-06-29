@@ -46,6 +46,7 @@ class Curl
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // not directly output
 		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookiePath); // set load cookie file
 		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookiePath); // set save cookie file
+		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		curl_setopt($ch, CURLOPT_URL, $url); // set url
 		if ($use_head) {
 			// skip
