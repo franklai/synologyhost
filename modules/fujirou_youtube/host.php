@@ -6,6 +6,13 @@ if (!class_exists('Curl')) {
     require 'curl.php';
 }
 
+$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
+foreach ($defines as $key) {
+    if (!defined($key)) {
+        define($key, $key);
+    }
+}
+
 class FujirouHostYouTube
 {
     public function __construct($url, $username, $password, $hostInfo, $verbose = false)
@@ -106,6 +113,9 @@ class FujirouHostYouTube
                 array_push($urlList, $item['url']);
             } elseif (array_key_exists('cipher', $item)) {
                 $url = $this->getUrlByCipher($item['cipher']);
+                array_push($urlList, $url);
+            } elseif (array_key_exists('signatureCipher', $item)) {
+                $url = $this->getUrlByCipher($item['signatureCipher']);
                 array_push($urlList, $url);
             } else {
                 $this->printMsg("Faield to get url or cipher in item\n");
