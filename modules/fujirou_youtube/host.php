@@ -53,7 +53,8 @@ class FujirouHostYouTube
 
         $videoMap = $this->getVideoMapGeneral($html);
         if (!$videoMap) {
-            if (strpos($html, 'age-gate-content') !== false) {
+            if (strpos($html, 'LOGIN_REQUIRED') !== false) {
+                $this->printMsg("require login\n");
                 $videoMap = $this->getVideoMapForAgeGate($html);
             }
         }
@@ -533,7 +534,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
-    // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
+    $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
 
     if ($argc >= 2) {
