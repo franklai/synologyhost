@@ -2,16 +2,6 @@
 if (!class_exists('Common')) {
     require 'common.php';
 }
-if (!class_exists('Curl')) {
-    require 'curl.php';
-}
-
-$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
-foreach ($defines as $key) {
-    if (!defined($key)) {
-        define($key, $key);
-    }
-}
 
 class FujirouHostYouTube
 {
@@ -48,8 +38,7 @@ class FujirouHostYouTube
         $url = $this->url;
 
         // 1. get html of YouTube url
-        $response = new Curl($url);
-        $html = $response->get_content();
+        $html = Common::getContent($url);
 
         $videoMap = $this->getVideoMapGeneral($html);
         if (!$videoMap) {
@@ -156,8 +145,7 @@ class FujirouHostYouTube
     private function getPlayerResponseFromEmbed($videoId)
     {
         $url = "https://www.youtube.com/get_video_info?video_id=$videoId";
-        $response = new Curl($url);
-        $html = $response->get_content();
+        $html = Common::getContent($url);
 
         parse_str($html, $items);
         $playerResponse = $items['player_response'];
@@ -310,13 +298,12 @@ class FujirouHostYouTube
 
         $this->printMsg("\n player url: $url\n");
 
-        $response = new Curl($url);
-        $html = $response->get_content();
+        $html = Common::getContent($url);
 
         $html = str_replace(";\n", ";", $html);
 
         $function_name_patterns = [
-            '/\b([a-zA-Z]{2})=function\(a\){a=a\.split\(""\);/',
+            '/([a-zA-Z$]{2})=function\(a\){a=a\.split\(""\);/',
             '/c&&d\.set\([^,]+,encodeURIComponent\(([a-zA-Z0-9\$]+)\(/',
             '/\.sig\|\|([a-zA-Z0-9\$]+)\(/',
         ];
@@ -534,7 +521,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
     $url = 'https://www.youtube.com/watch?v=rfFEhd7mk7c'; // DJ Earworm Mashup - United State of Pop 2015
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
-    $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
+    // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
 
     if ($argc >= 2) {
