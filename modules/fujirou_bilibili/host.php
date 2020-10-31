@@ -2,9 +2,6 @@
 if (!class_exists('Common')) {
     require 'common.php';
 }
-if (!class_exists('Curl')) {
-    require 'curl.php';
-}
 
 class FujirouHostBilibili
 {
@@ -55,7 +52,6 @@ class FujirouHostBilibili
 
         // get bilibili json by url
         $json = $this->request_json_by_url($url);
-
         $page = $this->get_page_from_url($url);
 
         // get video url by json
@@ -164,27 +160,6 @@ class FujirouHostBilibili
         return $episode_id;
     }
 
-    private function get_anime_aid($original_url)
-    {
-        $episode_id = $this->get_anime_episode_id($original_url);
-        if (!$episode_id) {
-            return false;
-        }
-
-        $url = 'http://bangumi.bilibili.com/web_api/get_source';
-        $data = "episode_id=$episode_id";
-
-        $response = new Curl($url, $data, null, $this->proxy);
-        $raw = $response->get_content();
-
-        $json = json_decode($raw, true);
-        if (!$json || !isset($json['result'])) {
-            return false;
-        }
-
-        return $json['result']['aid'];
-    }
-
     private function request_json_by_url($original_url)
     {
         if ($this->is_bvid_url($original_url)) {
@@ -205,14 +180,12 @@ class FujirouHostBilibili
 
         $url = "https://api.bilibili.com/x/web-interface/view?$params";
 
-        $response = new Curl($url);
-        $raw = $response->get_content();
+        $raw = Common::getContent($url);
         $this->printMsg("Get content of url: $url\n");
 
         if (!$raw) {
             throw new Exception("Failed to get content of url $url");
         }
-
         return json_decode($raw, true);
     }
 
@@ -233,8 +206,7 @@ class FujirouHostBilibili
         $url = "https://api.bilibili.com/x/player/playurl?$params";
         $this->printMsg("Get content of url: $url\n");
 
-        $response = new Curl($url);
-        $raw = $response->get_content();
+        $raw = Common::getContent($url);
         if (!$raw) {
             throw new Exception("Failed to get content of url $url");
         }
@@ -252,8 +224,7 @@ class FujirouHostBilibili
 
     private function request_bvid_from_url($url)
     {
-        $response = new Curl($url);
-        $raw = $response->get_content();
+        $raw = Common::getContent($url);
         if (!$raw) {
             throw new Exception("Failed to get content of url $url");
         }
@@ -327,12 +298,10 @@ class FujirouHostBilibili
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostBilibili';
-    //     $url = 'http://www.bilibili.com/video/av4775518/';
-    $url = 'http://www.bilibili.com/video/av4782176/'; // mayoiga E09 bilibili official
-    $url = 'http://www.bilibili.com/video/av4313184/';
-    $url = 'http://www.bilibili.com/video/av5991225/'; // flv only
+    $url = 'https://www.bilibili.com/bangumi/play/ep88573'; // mayoiga E09 bilibili official
+    $url = 'https://www.bilibili.com/video/av4313184/';
+    $url = 'https://www.bilibili.com/video/av5991225/'; // flv only
 
-    $url = 'http://bangumi.bilibili.com/anime/v/29004'; // Ghost in the Shell: Innocence
     $url = 'https://www.bilibili.com/video/av28641430'; // arashi ni shiyagare 180804
     $url = 'https://www.bilibili.com/video/BV12K4y1C7QU'; // arashi ni shiyagare 200328
 
