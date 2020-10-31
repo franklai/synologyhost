@@ -1,9 +1,12 @@
 name: CI
 
-on: [push]
+on:
+  push:
+  schedule:
+    - cron: '0 9 * * *'
 
 jobs:
-  build-test:
+  link-test:
     runs-on: ubuntu-latest
 
     steps:
