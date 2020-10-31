@@ -27,6 +27,8 @@ final class FujirouBilibiliTest extends HostsTestCase
 
     public function testBangumiEp()
     {
+        $this->markTestSkipped('skip test due to ip/country restriction.');
+
         $url = 'https://www.bilibili.com/bangumi/play/ep88882';
         $filename = '【4月】迷家 10【独家正版】.flv';
         $cid = '10732315';
@@ -36,6 +38,8 @@ final class FujirouBilibiliTest extends HostsTestCase
 
     public function testBangumiSs()
     {
+        $this->markTestSkipped('skip test due to ip/country restriction.');
+
         $url = 'https://www.bilibili.com/bangumi/play/ss33092';
         $filename = '【4月】阿爾蒂（僅限台灣地區）01.flv';
         $cid = '173509498';
