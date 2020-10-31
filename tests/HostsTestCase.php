@@ -30,7 +30,11 @@ class HostsTestCase extends TestCase
     protected function get_filename($obj)
     {
         $info = $obj->GetDownloadInfo();
-        return $info['DOWNLOAD_FILENAME'];
+        if (array_key_exists('DOWNLOAD_FILENAME', $info)) {
+            return $info['DOWNLOAD_FILENAME'];
+        } else {
+            return '';
+        }        
     }
 
     protected function get($url, $filename_answer, $cid_answer = null)
