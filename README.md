@@ -1,5 +1,7 @@
 # synologyhost
 
+![link test](https://github.com/franklai/synologyhost/workflows/CI/badge.svg)
+
 Collection of Synology Download Station File Hosting Module
 
 ## Supported Sites
