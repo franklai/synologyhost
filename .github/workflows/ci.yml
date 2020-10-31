@@ -8,6 +8,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: php-actions/composer@v1 # or alternative dependency management
+    - uses: php-actions/composer@v2
     - uses: php-actions/phpunit@v9
-    # ... then your own project steps ...
+      with:
+        action_bootstrap: vendor/autoload.php
+        action_args: tests
