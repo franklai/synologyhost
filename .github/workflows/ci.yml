@@ -11,5 +11,5 @@ jobs:
     - uses: php-actions/composer@v2
     - uses: php-actions/phpunit@v9
       with:
-        action_bootstrap: vendor/autoload.php
-        action_args: tests
+        bootstrap: vendor/autoload.php
+        args: tests
