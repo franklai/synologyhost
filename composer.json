@@ -1,12 +1,15 @@
 {
-    "autoload": {
-        "classmap": [
-            "modules/fujirou_bilibili",
-            "modules/fujirou_youtube"
-        ]
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^8",
-        "phpunit/php-invoker": "^2.0"
-    }
+  "autoload": {
+    "classmap": [
+      "modules/fujirou_bilibili",
+      "modules/fujirou_youtube"
+    ]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8",
+    "phpunit/php-invoker": "^2.0"
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+  }
 }
