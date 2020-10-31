@@ -18,7 +18,7 @@ final class FujirouYouTubeTest extends HostsTestCase
     public function testTopGun2020()
     {
         $url = 'https://www.youtube.com/watch?v=g4U4BQW9OEk';
-        $filename = 'Top Gun_ Maverick (2020) – New Trailer - Paramount Pictures.mp4';
+        $filename = 'Top Gun_ Maverick (2021) – New Trailer - Paramount Pictures.mp4';
 
         $this->get($url, $filename);
     }
@@ -33,8 +33,8 @@ final class FujirouYouTubeTest extends HostsTestCase
 
     public function testAgeGate()
     {
-        $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM';
-        $filename = 'Red Sparrow 2018 - Jennifer Lawrence School Scene - HD.mp4';
+        $url = 'https://www.youtube.com/watch?v=YKf6BJi-9tU';
+        $filename = 'LIFE - Restricted Trailer (In Theaters March 24).mp4';
 
         $this->get($url, $filename);
     }
