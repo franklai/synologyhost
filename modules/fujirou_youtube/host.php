@@ -84,7 +84,14 @@ class FujirouHostYouTube
             $this->printMsg("Failed to get player config\n");
             return null;
         }
-        $playerResponse = json_decode($playerConfig['args']['player_response'], true);
+        $playerResponse = null;
+        if (array_key_exists('args', $playerConfig)) {
+            $playerResponse = json_decode($playerConfig['args']['player_response'], true);
+            $this->printMsg("old style player response\n");
+        } else if (array_key_exists('streamingData', $playerConfig)) {
+            $playerResponse = $playerConfig;
+            $this->printMsg("get from initial player response\n");
+        }
 
         if (!$playerResponse) {
             $this->printMsg("Failed to find player response\n");
@@ -257,17 +264,24 @@ class FujirouHostYouTube
 
     private function getPlayerConfig($html)
     {
-        $pattern = '/ytplayer\.config = ({.*?}});/';
-        $configString = Common::getFirstMatch($html, $pattern);
-        $config = json_decode($configString, true);
+        $patterns = [
+            '/ytplayer\.config = ({.*?}});/',
+            '/ytInitialPlayerResponse = ({.*?}});/',
+        ];
+        foreach ($patterns as $pattern) {
+            $configString = Common::getFirstMatch($html, $pattern);
+            if ($configString) {
+                return json_decode($configString, true);
+            }
+        }
 
-        return $config;
+        return null;
     }
 
     private function getPlayerUrl($html)
     {
         $patterns = [
-            '/"(\/.+?\/player_ias.+?\/base\.js)"/',
+            '/"(\/[^"]+?\/player_ias.+?\/base\.js)"/',
             '/"(\/yts\/jsbin\/player.+?base.js)"/',
             // '/"assets":.+?"js":\s*("[^"]+")/',
         ];
@@ -303,7 +317,7 @@ class FujirouHostYouTube
         $html = str_replace(";\n", ";", $html);
 
         $function_name_patterns = [
-            '/([a-zA-Z$]{2})=function\(a\){a=a\.split\(""\);/',
+            '/([a-zA-Z$]{2})=function\(a\){a=a\.split\(""\);\w\w\./',
             '/c&&d\.set\([^,]+,encodeURIComponent\(([a-zA-Z0-9\$]+)\(/',
             '/\.sig\|\|([a-zA-Z0-9\$]+)\(/',
         ];
