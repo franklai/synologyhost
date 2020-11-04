@@ -82,6 +82,9 @@ class FujirouHostYouTube
         $playerConfig = $this->getPlayerConfig($html);
         if (!$playerConfig) {
             $this->printMsg("Failed to get player config\n");
+            $this->printMsg("\n== html begin ==\n");
+            $this->printMsg($html);
+            $this->printMsg("\n== html end ==\n");
             return null;
         }
         $playerResponse = null;
@@ -266,7 +269,7 @@ class FujirouHostYouTube
     {
         $patterns = [
             '/ytplayer\.config = ({.*?}});/',
-            '/ytInitialPlayerResponse = ({.*?}});/',
+            '/ytInitialPlayerResponse = ({.*?});/',
         ];
         foreach ($patterns as $pattern) {
             $configString = Common::getFirstMatch($html, $pattern);
@@ -537,6 +540,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
     // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
+    $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
 
     if ($argc >= 2) {
         $argument = $argv[1];
