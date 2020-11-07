@@ -366,8 +366,11 @@ class FujirouHostYouTube
 
     private function parseSubFuncType($html, $funcName)
     {
-        $pattern = sprintf("/%s:function\(.*?\)\{(.+?)\}/", $funcName);
-        $content = Common::getFirstMatch($html, $pattern);
+        $patterns = [
+            sprintf("/%s:function\(.*?\)\{(a\..+?)\}/", $funcName),
+            sprintf("/%s:function\(.*?\)\{(var c=a.+?)\}/", $funcName),
+        ];
+        $content = Common::getFirstMatchByPatterns($html, $patterns);
 
         if (false !== strpos($content, 'splice(0')) {
             return 'splice';
