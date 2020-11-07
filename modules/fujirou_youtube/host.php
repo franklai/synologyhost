@@ -271,13 +271,10 @@ class FujirouHostYouTube
             '/ytplayer\.config = ({.*?}});/',
             '/ytInitialPlayerResponse = ({.*?});/',
         ];
-        foreach ($patterns as $pattern) {
-            $configString = Common::getFirstMatch($html, $pattern);
-            if ($configString) {
-                return json_decode($configString, true);
-            }
+        $configString = Common::getFirstMatchByPatterns($html, $patterns);
+        if ($configString) {
+            return json_decode($configString, true);
         }
-
         return null;
     }
 
@@ -288,14 +285,10 @@ class FujirouHostYouTube
             '/"(\/yts\/jsbin\/player.+?base.js)"/',
             // '/"assets":.+?"js":\s*("[^"]+")/',
         ];
-
-        foreach ($patterns as $pattern) {
-            $url = Common::getFirstMatch($html, $pattern);
-            if ($url) {
-                return $url;
-            }
+        $url = Common::getFirstMatchByPatterns($html, $patterns);
+        if ($url) {
+            return $url;
         }
-
         return null;
     }
 
@@ -325,17 +318,12 @@ class FujirouHostYouTube
             '/\.sig\|\|([a-zA-Z0-9\$]+)\(/',
         ];
 
-        $funcName = '';
-        foreach ($function_name_patterns as $pattern) {
-            $funcName = Common::getFirstMatch($html, $pattern);
-            if ($funcName) {
-                $this->printMsg("found decrypt function name [$funcName]\n");
-                break;
-            }
-        }
+        $funcName = Common::getFirstMatchByPatterns($html, $function_name_patterns);
         if (!$funcName) {
             return false;
         }
+
+        $this->printMsg("found decrypt function name [$funcName]\n");
 
         $function_content_patterns = [
             "/$funcName=function\(a\){(.+?)}/",
@@ -343,14 +331,7 @@ class FujirouHostYouTube
             sprintf("/function %s\(.*?\)\{(.+?)\}/", str_replace('$', '\\$', $funcName)),
         ];
 
-        $funcContent = '';
-        foreach ($function_content_patterns as $pattern) {
-            $this->printMsg("\n function content pattern: $pattern \n");
-            $funcContent = Common::getFirstMatch($html, $pattern);
-            if ($funcContent) {
-                break;
-            }
-        }
+        $funcContent = Common::getFirstMatchByPatterns($html, $function_content_patterns);
         if (!$funcContent) {
             return false;
         }

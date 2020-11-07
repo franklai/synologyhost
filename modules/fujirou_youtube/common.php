@@ -54,6 +54,17 @@ class Common
         return false;
     }
 
+    public static function getFirstMatchByPatterns($string, $patterns)
+    {
+        foreach ($patterns as $pattern) {
+            $matched = self::getFirstMatch($string, $pattern);
+            if ($matched) {
+                return $matched;
+            }
+        }
+        return false;
+    }
+
     public static function getAllFirstMatch($string, $pattern)
     {
         $ret = preg_match_all($pattern, $string, $matches);
