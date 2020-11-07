@@ -38,4 +38,12 @@ final class FujirouYouTubeTest extends HostsTestCase
 
         $this->get($url, $filename);
     }
+
+    public function testMusicTrack()
+    {
+        $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI';
+        $filename = '一口一口.mp4';
+
+        $this->get($url, $filename);
+    }
 }
