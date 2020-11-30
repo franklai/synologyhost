@@ -55,4 +55,17 @@ final class FujirouBilibiliTest extends HostsTestCase
 
         $this->get($url, $filename, $cid);
     }
+
+    public function testList()
+    {
+        $url = 'https://www.bilibili.com/video/BV1qp4y1e7UA';
+        $list_title = '【我想加个】【字】200910庚子年乙酉月丙辰日山上刮风下雨';
+        $list_length = 4;
+
+        $obj = $this->get_obj($url);
+        $info = $obj->GetFileList();
+
+        $this->assertEquals($info['list_name'], $list_title);
+        $this->assertEquals(count($info['list_files']), $list_length);
+    }
 }

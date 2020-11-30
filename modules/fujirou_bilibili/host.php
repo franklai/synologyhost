@@ -3,6 +3,12 @@ if (!class_exists('Common')) {
     require 'common.php';
 }
 
+defined('DOWNLOAD_LIST_NAME') or define('DOWNLOAD_LIST_NAME', 'list_name');
+defined('DOWNLOAD_LIST_FILES') or define('DOWNLOAD_LIST_FILES', 'list_files');
+defined('DOWNLOAD_FILENAME') or define('DOWNLOAD_FILENAME', 'filename');
+defined('DOWNLOAD_URL') or define('DOWNLOAD_URL', 'downloadurl');
+defined('DOWNLOAD_LIST_SELECTED') or define('DOWNLOAD_LIST_SELECTED', 'list_selected');
+
 class FujirouHostBilibili
 {
     public function __construct($url, $username, $password, $hostInfo, $verbose = false)
@@ -37,6 +43,16 @@ class FujirouHostBilibili
             return array(
                 DOWNLOAD_ERROR => 'ERR_FILE_NO_EXIST',
             );
+        }
+    }
+
+    public function GetFileList()
+    {
+        try {
+            return $this->get_list();
+        } catch (Exception $e) {
+            $this->printMsg("Exception, " . $e->getMessage());
+            return false;
         }
     }
 
@@ -82,6 +98,38 @@ class FujirouHostBilibili
             echo "== curl command end ==\n";
 
             print_r($ret);
+        }
+
+        return $ret;
+    }
+
+    private function get_list()
+    {
+        $url = $this->url;
+
+        // get bilibili json by url
+        $json = $this->request_json_by_url($url);
+        $page = $this->get_page_from_url($url);
+
+        $list = $this->get_list_by_json($json);
+        if (count($list) === 1) {
+            $this->printMsg("only one item, return false as no list\n");
+            return false;
+        }
+
+        $data = $json['data'];
+        $list_name = $data['title'];
+        $this->printMsg("list title: $list_name\n");
+
+
+        $ret = array(
+            DOWNLOAD_LIST_NAME => $list_name,
+            DOWNLOAD_LIST_FILES => $list,
+        );
+
+        if (is_int($page)) {
+            $ret[DOWNLOAD_LIST_SELECTED] = array($page);
+            $this->printMsg("selected page: $page\n");
         }
 
         return $ret;
@@ -175,7 +223,7 @@ class FujirouHostBilibili
             $params = "bvid=$id";
             $this->printMsg("bangumi, get bvid is: $id\n");
         } else {
-            throw new Exception("Failed to find video id of url $original_url");
+            throw new Exception("Failed to find video id of url $original_url\n");
         }
 
         $url = "https://api.bilibili.com/x/web-interface/view?$params";
@@ -293,6 +341,33 @@ class FujirouHostBilibili
 
         return $title;
     }
+
+    private function get_list_by_json($json)
+    {
+        $data = $json['data'];
+        $bvid = $data['bvid'];
+        $pages = $data['pages'];
+
+        $list = array();
+        foreach ($pages as $item) {
+            $page = $item['page'];
+            $part = $item['part'];
+            $decoded_part = html_entity_decode($part);
+            $url_with_page = "https://www.bilibili.com/video/$bvid?p=$page";
+            array_push(
+                $list,
+                array(
+                    DOWNLOAD_FILENAME => $decoded_part,
+                    DOWNLOAD_URL => $url_with_page,
+                )
+            );
+
+            $this->printMsg("\tpage $page, $decoded_part\n");
+            $this->printMsg("\t\t$url_with_page\n");
+        }
+
+        return $list;
+    }
 }
 
 // php -d open_basedir= host.php
@@ -305,8 +380,13 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.bilibili.com/video/av28641430'; // arashi ni shiyagare 180804
     $url = 'https://www.bilibili.com/video/BV12K4y1C7QU'; // arashi ni shiyagare 200328
 
+    $getList = false;
     if ($argc >= 2) {
         $argument = $argv[1];
+        if ($argument === '--list') {
+            $argument = $argv[2];
+            $getList = true;
+        }
         if (substr(strtolower($argument), 0, 4) === 'http') {
             $url = $argument;
         }
@@ -315,8 +395,14 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array(), true);
 
-    echo "Get download info of '$url'\n\n";
-    $info = $obj->GetDownloadInfo();
+    if ($getList) {
+        echo "Show list of $url\n\n";
+        $info = $obj->GetFileList();
+        // var_dump($info);
+    } else {
+        echo "Get download info of '$url'\n\n";
+        $info = $obj->GetDownloadInfo();
+    }
 }
 
 // vim: expandtab ts=4
