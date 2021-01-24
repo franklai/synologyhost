@@ -1,29 +1,28 @@
 #!/bin/sh
 
-TAR=/bin/tar
+TAR=tar
 PHP=/usr/bin/php
-HOST=vimeo
 FILES="INFO common.php host.php"
 
-GetVersion()
+GetNameAndVersion()
 {
     local phpSrc="
         \$json = json_decode(file_get_contents(\"INFO\"), TRUE);
         if (\$json)  {
-            echo \$json[\"version\"];
+            echo \$json[\"name\"] .'-'. \$json[\"version\"];
         } else {
             printf(\"Failed to json decode INFO\\n\");
         }
     "
 
     local cmd=""
-    local version=$($PHP -d open_basedir= -r "$phpSrc")
-    echo $version
+    local nameAndVersion=$($PHP -d open_basedir= -r "$phpSrc")
+    echo $nameAndVersion
 }
 
-hostVersion=$(GetVersion)
+nameAndVersion=$(GetNameAndVersion)
 
-hostFile="$HOST-$hostVersion.host"
+hostFile="$nameAndVersion.host"
 
 echo "Create $hostFile contains [$FILES]"
 $TAR zcf $hostFile  $FILES
