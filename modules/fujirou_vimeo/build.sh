@@ -3,7 +3,7 @@
 TAR=/bin/tar
 PHP=/usr/bin/php
 HOST=vimeo
-FILES="INFO common.php curl.php host.php"
+FILES="INFO common.php host.php"
 
 GetVersion()
 {
