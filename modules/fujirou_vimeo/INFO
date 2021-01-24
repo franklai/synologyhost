@@ -1,8 +1,8 @@
 {
-"name": "vimeo",
+"name": "fujirou_vimeo",
 "hostprefix": "vimeo.com",
 "displayname": "Vimeo",
-"version": "1.3",
+"version": "1.4",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
