@@ -6,6 +6,8 @@ Collection of Synology Download Station File Hosting Module
 
 ## Supported Sites
 * [bilibili](https://www.bilibili.com)
+* [dailymotion](https://dailymotion.com)
+* [vimeo](https://vimeo.com)
 
 ## Links
 Synology Download Station Developer Guide to File Hosting Module
