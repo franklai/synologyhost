@@ -2,7 +2,7 @@
 
 TAR=tar
 PHP=/usr/bin/php
-FILES="INFO common.php curl.php host.php"
+FILES="INFO common.php host.php"
 
 GetNameAndVersion()
 {

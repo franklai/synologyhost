@@ -12,9 +12,8 @@ class Common
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0");
 
-        curl_setopt($curl, CURLOPT_VERBOSE, true);
+        // curl_setopt($curl, CURLOPT_VERBOSE, true);
 
         curl_setopt($curl, CURLOPT_URL, $url);
 

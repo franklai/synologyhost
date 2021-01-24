@@ -6,12 +6,13 @@ if (!class_exists('Common')) {
 
 class FujirouHostDailymotion
 {
-    public function __construct($url, $username, $password, $hostInfo)
+    public function __construct($url, $username, $password, $hostInfo, $verbose = false)
     {
         $this->url = $url;
         $this->username = $username;
         $this->password = $password;
         $this->hostInfo = $hostInfo;
+        $this->verbose = $verbose;
 
         // type of video url please check the following url
         // http://www.dailymotion.com/doc/api/obj-video.html
@@ -22,6 +23,19 @@ class FujirouHostDailymotion
             'stream_h264_url',
             'stream_h264_ld_url',
         );
+    }
+
+    private function printMsg($msg)
+    {
+        if (!$this->verbose) {
+            return;
+        }
+
+        if (is_array($msg)) {
+            print_r($msg);
+        } else {
+            echo $msg;
+        }
     }
 
     public function onDownloaded()
@@ -48,37 +62,37 @@ class FujirouHostDailymotion
 
         // 1. parse video id from url
         $videoId = $this->getVideoId($url);
-        Common::debug("video id: $videoId");
+        $this->printMsg("video id: $videoId");
         if (!$videoId) {
-            Common::debug("Failed to get video id from url [$url].");
+            $this->printMsg("Failed to get video id from url [$url].");
             return $ret;
         }
 
         // 2. get json info of video
         $jsonUrl = sprintf(
-            "https://www.dailymotion.com/embed/video/%s?autoplay=1",
+            "https://www.dailymotion.com/embed/video/%s",
             $videoId
         );
-        Common::debug("JSON url is [$jsonUrl]");
+        $this->printMsg("JSON url is [$jsonUrl]");
 
         $html = Common::getContent($jsonUrl);
 
         $json = $this->getJsonFromHtml($html);
         if (!$json) {
-            Common::debug('Failed to get json from html.');
+            $this->printMsg('Failed to get json from html.');
             return $ret;
         }
 
         // 3. find url from json info
         $videoUrl = $this->getVideoUrl($json);
         if (empty($videoUrl)) {
-            Common::debug('Failed to get video url from json.');
+            $this->printMsg('Failed to get video url from json.');
             return $ret;
         }
 
         // 4. find title from json
         $videoTitle = $this->getVideoTitle($json);
-        Common::debug("video title: $videoTitle");
+        $this->printMsg("video title: $videoTitle");
 
         // TODO: check it's flv or mp4 format
         $filename = Common::sanitizePath($videoTitle) . ".mp4";
@@ -86,7 +100,6 @@ class FujirouHostDailymotion
         $ret = array(
             DOWNLOAD_URL => $videoUrl,
             DOWNLOAD_FILENAME => $filename,
-            DOWNLOAD_COOKIE => $this->tmpCookiePath,
         );
 
         return $ret;
@@ -95,10 +108,10 @@ class FujirouHostDailymotion
     private function getJsonFromHtml($html)
     {
         $prefix = '{"context":';
-        $suffix = "};\n";
+        $suffix = "};<";
         $js = Common::getSubString($html, $prefix, $suffix);
         if (empty($js)) {
-            Common::debug('Failed to find info json');
+            $this->printMsg('Failed to find info json');
             return false;
         }
 
@@ -161,12 +174,12 @@ class FujirouHostDailymotion
         $qualities = $metadata['qualities'];
 
         foreach ($qualities as $q => $items) {
-            Common::debug("quality [" . $q . "]");
+            $this->printMsg("quality [" . $q . "]");
 
             foreach ($items as $item) {
                 $type = $item['type'];
                 $url = $item['url'];
-                Common::debug("\ttype [$type], url: $url");
+                $this->printMsg("\ttype [$type], url: $url");
             }
         }
 
@@ -174,28 +187,14 @@ class FujirouHostDailymotion
             $url_from_m3u8 = $this->findVideoFromM3u8($url);
             if ($url_from_m3u8) {
                 $url = $url_from_m3u8;
-                common::debug("find video url: $url from m3u8");
+                $this->printMsg("find video url: $url from m3u8");
                 return $url;
             }
         }
 
-        Common::debug("Choose last url: $url");
+        $this->printMsg("Choose last url: $url");
 
-        $hash = md5($url);
-        $this->tmpCookiePath = "/tmp/dailymotion.cookie.$hash.txt";
-        $response = new Curl($url, null, null, $this->tmpCookiePath);
-        $location = $response->get_header('Location');
-        if (empty($location)) {
-            return $url;
-        }
-
-        Common::debug("location: $location");
-        $pos = strpos($location, "#");
-        if ($pos === false) {
-            return $location;
-        }
-
-        return substr($location, 0, $pos);
+        return $url;
     }
 
     private function getVideoTitle($json)
@@ -215,17 +214,9 @@ class FujirouHostDailymotion
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostDailymotion';
-//     $url = 'http://www.dailymotion.com/video/xtdg4e_2012-mtv-vma-performance-recap-pink-taylor-swift-lil-wayne_music';
-    //     $url = 'http://www.dailymotion.com/video/xnqusv_the-next-list-jake-shimabukuro_lifestyle?search_algo=2';
-    //     $url = 'http://www.dailymotion.com/video/x25ef_jake-shimabukuro-virtuose-du-ukulel_music?search_algo=2';
-    //     $url = 'http://www.dailymotion.com/video/xa02_while-my-ukulele-gently-weeps_music';
-    //    $url = 'http://www.dailymotion.com/video/x1u5p24_20080809-vs';
-    $url = 'http://www.dailymotion.com/video/x2kmre5_56kast-52-on-a-tous-des-choses-a-cacher-et-des-points-a-relier_tech';
-    $url = 'http://www.dailymotion.com/video/x2bzn2n_taylor-swift-blank-space-live-at-kiis-fm-jingle-ball-2014_music';
-    $url = 'http://www.dailymotion.com/playlist/x1hlho_ginji030_perfume-2/1#video=xt1mw1';
 
-    $url = 'http://www.dailymotion.com/video/xn30yp_fairy-tail-bande-annonce-preview-film-2012_shortfilms'; // short, 00:31, 1.72MB
-    $url = 'http://www.dailymotion.com/video/x4xeb5l_the-amazing-world-of-gumball-the-choices-s5e6_tv';
+    $url = 'https://www.dailymotion.com/video/xt1mw1?playlist=x1hlho'; // Perfume 3rd Tour JPN - チョコレイト・ディスコ
+
     $url = 'https://www.dailymotion.com/video/k5fGL5hXWOukIqsUUjz';
     $url = 'https://www.dailymotion.com/video/k5i3FTWRM6JAbZt3Uq8';
     $url = 'https://www.dailymotion.com/video/x65eahd'; // 【妙WOW種子】Seed - 23 圍棋女神黑嘉嘉 生日快樂！
