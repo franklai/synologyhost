@@ -3,6 +3,7 @@
     "classmap": [
       "modules/fujirou_bilibili",
       "modules/fujirou_dailymotion",
+      "modules/fujirou_vimeo",
       "modules/fujirou_youtube"
     ]
   },
