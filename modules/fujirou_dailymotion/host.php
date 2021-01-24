@@ -3,9 +3,6 @@
 if (!class_exists('Common')) {
     require 'common.php';
 }
-if (!class_exists('Curl')) {
-    require 'curl.php';
-}
 
 class FujirouHostDailymotion
 {
@@ -51,7 +48,7 @@ class FujirouHostDailymotion
 
         // 1. parse video id from url
         $videoId = $this->getVideoId($url);
-        Common::debug('video id:' . $videoId);
+        Common::debug("video id: $videoId");
         if (!$videoId) {
             Common::debug("Failed to get video id from url [$url].");
             return $ret;
@@ -59,13 +56,12 @@ class FujirouHostDailymotion
 
         // 2. get json info of video
         $jsonUrl = sprintf(
-            "https://www.dailymotion.com/embed/video/%s",
+            "https://www.dailymotion.com/embed/video/%s?autoplay=1",
             $videoId
         );
         Common::debug("JSON url is [$jsonUrl]");
 
-        $response = new Curl($jsonUrl, null, null, null);
-        $html = $response->get_content();
+        $html = Common::getContent($jsonUrl);
 
         $json = $this->getJsonFromHtml($html);
         if (!$json) {
@@ -76,6 +72,7 @@ class FujirouHostDailymotion
         // 3. find url from json info
         $videoUrl = $this->getVideoUrl($json);
         if (empty($videoUrl)) {
+            Common::debug('Failed to get video url from json.');
             return $ret;
         }
 
@@ -107,6 +104,7 @@ class FujirouHostDailymotion
 
         $pattern = '/(\{"context":.*\});/';
         $json_string = Common::getFirstMatch($js, $pattern);
+
         return json_decode($json_string, true);
     }
 
@@ -133,8 +131,7 @@ class FujirouHostDailymotion
 
     private function findVideoFromM3u8($url)
     {
-        $response = new Curl($url);
-        $m3u8 = $response->get_content();
+        $m3u8 = Common::getContent($url);
 
         $pattern = '/PROGRESSIVE-URI="(http.*?\.mp4).*?"/';
         $matches = common::getAllFirstMatch($m3u8, $pattern);
@@ -231,6 +228,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'http://www.dailymotion.com/video/x4xeb5l_the-amazing-world-of-gumball-the-choices-s5e6_tv';
     $url = 'https://www.dailymotion.com/video/k5fGL5hXWOukIqsUUjz';
     $url = 'https://www.dailymotion.com/video/k5i3FTWRM6JAbZt3Uq8';
+    $url = 'https://www.dailymotion.com/video/x65eahd'; // 【妙WOW種子】Seed - 23 圍棋女神黑嘉嘉 生日快樂！
 
     if (count($argv) >= 2 && 0 === strncmp($argv[1], 'http', 4)) {
         $url = $argv[1];

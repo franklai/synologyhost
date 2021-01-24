@@ -2,6 +2,7 @@
   "autoload": {
     "classmap": [
       "modules/fujirou_bilibili",
+      "modules/fujirou_dailymotion",
       "modules/fujirou_youtube"
     ]
   },
