@@ -312,14 +312,16 @@ class FujirouHostYouTube
 
         $html = str_replace(";\n", ";", $html);
 
+        // Nx=function(a){a=a.split("");Mx["do"](a,17);Mx.FH(a,61);Mx.xK(a,3);Mx["do"](a,12);Mx.xK(a,1);Mx.FH(a,37);Mx["do"](a,47);Mx.FH(a,6);return a.join("")};
         $function_name_patterns = [
-            '/([a-zA-Z$]{2})=function\(a\){a=a\.split\(""\);\w\w\./',
+            '/([a-zA-Z$]{2})=function\(a\){a=a\.split\(""\);\w\w[\.\[]/',
             '/c&&d\.set\([^,]+,encodeURIComponent\(([a-zA-Z0-9\$]+)\(/',
             '/\.sig\|\|([a-zA-Z0-9\$]+)\(/',
         ];
 
         $funcName = Common::getFirstMatchByPatterns($html, $function_name_patterns);
         if (!$funcName) {
+            $this->printMsg("Failed to find function name\n");
             return false;
         }
 
@@ -339,7 +341,7 @@ class FujirouHostYouTube
         $this->printMsg($funcContent);
         $this->printMsg("\n == decrypt function content end == \n");
 
-        $pattern = sprintf("/\.([a-zA-Z0-9\$]{2})\(a,([0-9]+)\)/");
+        $pattern = sprintf("/\.?\[?\"?([a-zA-Z0-9\$]{2})\"?\]?\(a,([0-9]+)\)/");
         $ret = preg_match_all($pattern, $funcContent, $matches, PREG_SET_ORDER);
 
         $subFuncDict = array();
@@ -355,6 +357,8 @@ class FujirouHostYouTube
             $type = $subFuncDict[$name];
 
             $actions[] = array('type' => $type, 'parameter' => $parameter);
+
+            $this->printMsg("name: $name, type: $type, para: $parameter\n");
         }
 
         $funcName = 'decrypt_general';
@@ -366,9 +370,12 @@ class FujirouHostYouTube
 
     private function parseSubFuncType($html, $funcName)
     {
+        // FH:function(a){a.reverse()},
+        // "do":function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},
+        // xK:function(a,b){a.splice(0,b)}
         $patterns = [
-            sprintf("/%s:function\(.*?\)\{(a\..+?)\}/", $funcName),
-            sprintf("/%s:function\(.*?\)\{(var c=a.+?)\}/", $funcName),
+            sprintf("/\"?%s\"?:function\(.*?\)\{(a\..+?)\}/", $funcName),
+            sprintf("/\"?%s\"?:function\(.*?\)\{(var c=a.+?)\}/", $funcName),
         ];
         $content = Common::getFirstMatchByPatterns($html, $patterns);
 
@@ -388,6 +395,7 @@ class FujirouHostYouTube
         // get player content first
         $decryptFuncArray = $this->getDecryptFunctionArray();
         if (!$decryptFuncArray) {
+            $this->printMsg("Failed to get decrypt function array\n");
             return false;
         }
 
@@ -512,7 +520,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
 //    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
     //     $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
     //    $url = 'http://www.youtube.com/watch?v=RY35O02Fg8M';
-    $url = 'http://www.youtube.com/watch?v=iul4SBlHIf8';
+    $url = 'https://www.youtube.com/watch?v=iul4SBlHIf8'; // Oasis - Don't look back in anger
     $url = 'http://www.youtube.com/watch?v=FXg4LXsg14s';
     $url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
     $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
@@ -524,7 +532,8 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
     // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
-    $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
+    // $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
+    $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI'; // 韋禮安 WeiBird - 一口一口
 
     if ($argc >= 2) {
         $argument = $argv[1];
