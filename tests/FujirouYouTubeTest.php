@@ -9,8 +9,8 @@ final class FujirouYouTubeTest extends HostsTestCase
 
     public function testBlankSpace()
     {
-        $url = 'https://www.youtube.com/watch?v=e-ORhEE9VVg';
-        $filename = 'Taylor Swift - Blank Space.mp4';
+        $url = 'https://www.youtube.com/watch?v=YHxSSEYA7_E';
+        $filename = '水樹奈々『禁断のレジスタンス』MUSIC CLIP（Full Ver.）.mp4';
 
         $this->get($url, $filename);
     }
