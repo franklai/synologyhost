@@ -22,4 +22,12 @@ final class FujirouVimeoTest extends HostsTestCase
 
         $this->get($url, $filename);
     }
+
+    public function testGetJapaneseTitle()
+    {
+        $url = 'https://vimeo.com/199001736';
+        $filename = 'イベント コードギアス 反逆のルルーシュ キセキのアニバーサリー コメント動画.mp4';
+
+        $this->get($url, $filename);
+    }
 }
