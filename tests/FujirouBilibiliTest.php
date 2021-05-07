@@ -50,7 +50,7 @@ final class FujirouBilibiliTest extends HostsTestCase
     public function testGetPages()
     {
         $url = 'https://www.bilibili.com/video/BV1vs411k7tn?p=11';
-        $filename = '「Thunderbolt Fantasy 东离剑游纪」原声集专辑 - 11.Kguy&kill don_t 生kiLL.mp4';
+        $filename = '「Thunderbolt Fantasy 东离剑游纪」原声集专辑 - 11.Kguy&kill don_t 生kiLL.flv';
         $cid = '9726377';
 
         $this->get($url, $filename, $cid);
