@@ -13,6 +13,7 @@ class FujirouHostDailymotion
         $this->password = $password;
         $this->hostInfo = $hostInfo;
         $this->verbose = $verbose;
+        $this->cookie_path = sprintf('/var/services/tmp/download_dailymotion_cookie.%s', hash('sha256', $url));
 
         // type of video url please check the following url
         // http://www.dailymotion.com/doc/api/obj-video.html
@@ -75,7 +76,7 @@ class FujirouHostDailymotion
         );
         $this->printMsg("JSON url is [$jsonUrl]");
 
-        $html = Common::getContent($jsonUrl);
+        $html = Common::getContent($jsonUrl, $this->cookie_path);
 
         $json = $this->getJsonFromHtml($html);
         if (!$json) {
@@ -100,6 +101,7 @@ class FujirouHostDailymotion
         $ret = array(
             DOWNLOAD_URL => $videoUrl,
             DOWNLOAD_FILENAME => $filename,
+            DOWNLOAD_COOKIE => $this->cookie_path,
         );
 
         return $ret;
@@ -144,7 +146,7 @@ class FujirouHostDailymotion
 
     private function findVideoFromM3u8($url)
     {
-        $m3u8 = Common::getContent($url);
+        $m3u8 = Common::getContent($url, $this->cookie_path);
 
         $pattern = '/PROGRESSIVE-URI="(http.*?\.mp4).*?"/';
         $matches = common::getAllFirstMatch($m3u8, $pattern);

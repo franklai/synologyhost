@@ -2,7 +2,7 @@
 
 class Common
 {
-    public static function getContent($url)
+    public static function getContent($url, $cookie_path = null)
     {
         $curl = curl_init();
 
@@ -12,6 +12,9 @@ class Common
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        if ($cookie_path) {
+            curl_setopt($curl, CURLOPT_COOKIEJAR, $cookie_path);
+        }
 
         // curl_setopt($curl, CURLOPT_VERBOSE, true);
 
