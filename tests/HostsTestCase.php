@@ -3,7 +3,7 @@ declare (strict_types = 1);
 
 use PHPUnit\Framework\TestCase;
 
-$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL'];
+$defines = ['DOWNLOAD_ERROR', 'DOWNLOAD_FILENAME', 'DOWNLOAD_URL', 'DOWNLOAD_COOKIE'];
 foreach ($defines as $key) {
     if (!defined($key)) {
         define($key, $key);
