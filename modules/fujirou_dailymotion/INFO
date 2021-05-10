@@ -2,7 +2,7 @@
 "name": "fujirou_dailymotion",
 "hostprefix": "dailymotion.com",
 "displayname": "Dailymotion",
-"version": "1.12",
+"version": "1.13",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
