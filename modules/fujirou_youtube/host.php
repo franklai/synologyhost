@@ -154,7 +154,7 @@ class FujirouHostYouTube
 
     private function getPlayerResponseFromEmbed($videoId)
     {
-        $url = "https://www.youtube.com/get_video_info?video_id=$videoId";
+        $url = "https://www.youtube.com/get_video_info?video_id=$videoId&html5=1";
         $html = Common::getContent($url);
 
         parse_str($html, $items);
