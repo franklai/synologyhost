@@ -350,11 +350,17 @@ class FujirouHostYouTube
         foreach ($matches as $match) {
             $name = $match[1];
             $parameter = $match[2];
+            $type = null;
 
-            if (!array_key_exists($name, $subFuncDict)) {
-                $subFuncDict[$name] = $this->parseSubFuncType($html, $name);
+            if (array_key_exists($name, $subFuncDict)) {
+                $type = $subFuncDict[$name];
+            } else {
+                $type = $this->parseSubFuncType($html, $name);
+                if (!$type) {
+                    continue;
+                }
+                $subFuncDict[$name] = $type;
             }
-            $type = $subFuncDict[$name];
 
             $actions[] = array('type' => $type, 'parameter' => $parameter);
 
@@ -374,11 +380,10 @@ class FujirouHostYouTube
         // "do":function(a,b){var c=a[0];a[0]=a[b%a.length];a[b%a.length]=c},
         // xK:function(a,b){a.splice(0,b)}
         $patterns = [
-            sprintf("/\"?%s\"?:function\(.*?\)\{(a\..+?)\}/", $funcName),
-            sprintf("/\"?%s\"?:function\(.*?\)\{(var c=a.+?)\}/", $funcName),
+            sprintf("/\"?%s\"?:function\(a,b\)\{(a\..+?)\}/", $funcName),
+            sprintf("/\"?%s\"?:function\(a,b\)\{(var c=a.+?)\}/", $funcName),
         ];
         $content = Common::getFirstMatchByPatterns($html, $patterns);
-
         if (false !== strpos($content, 'splice(0')) {
             return 'splice';
         } elseif (false !== strpos($content, 'reverse()')) {

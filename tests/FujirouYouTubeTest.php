@@ -7,7 +7,7 @@ final class FujirouYouTubeTest extends HostsTestCase
 {
     protected $module = 'FujirouHostYouTube';
 
-    public function testBlankSpace()
+    public function testMizukiNana()
     {
         $url = 'https://www.youtube.com/watch?v=YHxSSEYA7_E';
         $filename = '水樹奈々『禁断のレジスタンス』MUSIC CLIP（Full Ver.）.mp4';
