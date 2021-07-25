@@ -31,14 +31,6 @@ final class FujirouYouTubeTest extends HostsTestCase
         $this->get($url, $filename);
     }
 
-    public function testAgeGate()
-    {
-        $url = 'https://www.youtube.com/watch?v=YKf6BJi-9tU';
-        $filename = 'LIFE - Restricted Trailer (In Theaters March 24).mp4';
-
-        $this->get($url, $filename);
-    }
-
     public function testMusicTrack()
     {
         $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI';
