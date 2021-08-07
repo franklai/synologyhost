@@ -2,11 +2,12 @@
 "name": "fujirou_youtube",
 "hostprefix": "youtube.com,youtu.be",
 "displayname": "YouTube alt",
-"version": "1.16",
+"version": "1.17",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
 "authentication": "no",
+"supporttasklist": "yes",
 "module": "host.php",
 "class": "FujirouHostYouTube",
 "description": "YouTube download alternative"

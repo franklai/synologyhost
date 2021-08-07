@@ -3,6 +3,12 @@ if (!class_exists('Common')) {
     require 'common.php';
 }
 
+defined('DOWNLOAD_LIST_NAME') or define('DOWNLOAD_LIST_NAME', 'list_name');
+defined('DOWNLOAD_LIST_FILES') or define('DOWNLOAD_LIST_FILES', 'list_files');
+defined('DOWNLOAD_FILENAME') or define('DOWNLOAD_FILENAME', 'filename');
+defined('DOWNLOAD_URL') or define('DOWNLOAD_URL', 'downloadurl');
+defined('DOWNLOAD_LIST_SELECTED') or define('DOWNLOAD_LIST_SELECTED', 'list_selected');
+
 class FujirouHostYouTube
 {
     public function __construct($url, $username, $password, $hostInfo, $verbose = false)
@@ -70,6 +76,126 @@ class FujirouHostYouTube
         );
 
         return $ret;
+    }
+
+    public function GetFileList()
+    {
+        try {
+            return $this->get_list();
+        } catch (Exception $e) {
+            $this->printMsg("Exception, " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // https://www.youtube.com/playlist?list=OLAK5uy_lhO8Ij0yqMycUpr7Jnk4R0c1OfH4f84kk
+    private function get_list()
+    {
+        $url = $this->url;
+
+        $list_id = $this->getListIdFromUrl($url);
+        if (!$list_id) {
+            return false;
+        }
+        $list_url = "https://www.youtube.com/playlist?list=$list_id";
+
+        $html = Common::getContent($list_url);
+        $init_data = $this->get_initial_data($html);
+        if (!$init_data) {
+            $this->printMsg("Failed to get init data\n");
+            return null;
+        }
+        $video_list = [];
+        $tabs = $this->extract_array_by_key($init_data, "tabs");
+        // $tabs = @$init_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"];
+        if ($tabs) {
+            $items = $this->extract_from_tabs($tabs);
+            if (!$items) {
+                $this->printMsg("Failed to extract data from tabs\n");
+                return null;
+            }
+            $item_count = count($items);
+            $video_list = $this->get_video_list($items);
+        } else {
+            $this->printMsg("Failed to extract from tabs \n");
+            var_dump($html);
+        }
+
+        $playlist_title = $this->get_playlist_title($html);
+
+        $ret = array(
+            DOWNLOAD_LIST_NAME => $playlist_title,
+            DOWNLOAD_LIST_FILES => $video_list,
+        );
+
+        return $ret;
+    }
+
+    private function get_playlist_title($html)
+    {
+        $pattern = '/meta property="og:title" content="(.+?)"/';
+        return Common::getFirstMatch($html, $pattern);
+    }
+
+    private function get_video_list($items)
+    {
+        $video_list = [];
+        foreach ($items as $key => $video) {
+            $id = $video['videoId'];
+            $text = @$video['title']['runs'][0]['text'];
+            $no = $key + 1;
+            array_push($video_list, [
+                DOWNLOAD_FILENAME => sprintf("%02d. %s", $no, $text),
+                DOWNLOAD_URL => "https://www.youtube.com/watch?v=$id",
+            ]);
+        }
+        return $video_list;
+    }
+
+    private function extract_from_tabs($tabs)
+    {
+        return $this->find_all_values_by_key($tabs, "playlistVideoRenderer");
+    }
+
+    private function extract_array_by_key($value, $target_key)
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+        foreach ($value as $key => $value) {
+            if ($key === $target_key) {
+                return $value;
+            }
+            $found = $this->extract_array_by_key($value, $target_key);
+            if ($found) {
+                return $found;
+            }
+        }
+        return null;
+    }
+
+    private function find_all_values_by_key($value, $target_key)
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+        $all_items = [];
+        foreach ($value as $key => $value) {
+            if ($key === $target_key) {
+                return [$value];
+            }
+            $found = $this->find_all_values_by_key($value, $target_key);
+            $all_items = array_merge($all_items, $found);
+
+            $count = count($all_items);
+        }
+        return $all_items;
+    }
+
+    private function get_initial_data($html)
+    {
+        $pattern = '/var ytInitialData = ({.+?});<\/script>/';
+        return json_decode(Common::getFirstMatch($html, $pattern), true);
     }
 
     private function getVideoMapGeneral($html)
@@ -154,13 +280,21 @@ class FujirouHostYouTube
 
     private function getPlayerResponseFromEmbed($videoId)
     {
-        $url = "https://www.youtube.com/get_video_info?video_id=$videoId&html5=1";
+        $url = "https://www.youtube.com/get_video_info?video_id=$videoId&html5=1&c=TVHTML5&cver=6.20180913";
         $html = Common::getContent($url);
 
         parse_str($html, $items);
         $playerResponse = $items['player_response'];
         return json_decode($playerResponse, true);
     }
+
+    private function getListIdFromUrl($url)
+    {
+        $query = parse_url($url, PHP_URL_QUERY);
+        parse_str($query, $items);
+        return $items['list'];
+    }
+
 
     private function getVideoId($html)
     {
@@ -522,14 +656,8 @@ class FujirouHostYouTube
 // php -d open_basedir= host.php
 if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $module = 'FujirouHostYouTube';
-//    $url = 'http://www.youtube.com/watch?v=tNC9V2ewsb4';
-    //     $url = 'https://www.youtube.com/watch?v=-jej8YS4Slk';
-    //    $url = 'http://www.youtube.com/watch?v=RY35O02Fg8M';
     $url = 'https://www.youtube.com/watch?v=iul4SBlHIf8'; // Oasis - Don't look back in anger
-    $url = 'http://www.youtube.com/watch?v=FXg4LXsg14s';
-    $url = 'http://www.youtube.com/watch?v=tNo3LuZXA1w';
-    $url = 'http://www.youtube.com/watch?v=Ci8REzfzMHY';
-// $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
+    // $url = 'http://www.youtube.com/watch?v=UHFAjkD_LLg'; // Taylor Swift feat Paula Fernandes Long Live VEVO 1080p
     // $url = 'https://www.youtube.com/watch?v=7QdCnvixNvM';
     // $url = 'http://www.youtube.com/watch?v=w3KOowB4k_k'; // Mariah Carey - Honey (VEVO)
     $url = 'https://www.youtube.com/watch?v=2LbEN_Ph1-E'; // amuro namie - Sweet Kisses
@@ -539,9 +667,15 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
     // $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
     $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI'; // 韋禮安 WeiBird - 一口一口
+    $url = 'https://www.youtube.com/playlist?list=OLAK5uy_kDvtd-ErInjfwkppvJ9DGp1-CgJBccpHc'; // Chata - SUMMER FOCUS
 
+    $get_list = false;
     if ($argc >= 2) {
         $argument = $argv[1];
+        if ($argument === '--list') {
+            $argument = $argv[2];
+            $get_list = true;
+        }
         if (substr(strtolower($argument), 0, 4) === 'http') {
             $url = $argument;
         }
@@ -550,8 +684,15 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $refClass = new ReflectionClass($module);
     $obj = $refClass->newInstance($url, '', '', array(), true);
 
-    echo "Get download info of '$url'\n\n";
-    $info = $obj->GetDownloadInfo();
+    if ($get_list) {
+        // php host.php --list [youtube_playlist_Url]
+        echo "Show list of $url\n\n";
+        $info = $obj->GetFileList();
+    } else {
+        // php host.php [youtube_url]
+        echo "Get download info of '$url'\n\n";
+        $info = $obj->GetDownloadInfo();
+    }
 
     print_r($info);
 }
