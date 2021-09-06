@@ -15,10 +15,10 @@ final class FujirouYouTubeTest extends HostsTestCase
         $this->get($url, $filename);
     }
 
-    public function testTopGun2020()
+    public function testTopGun2022()
     {
         $url = 'https://www.youtube.com/watch?v=g4U4BQW9OEk';
-        $filename = 'Top Gun_ Maverick (2021) – New Trailer - Paramount Pictures.mp4';
+        $filename = 'Top Gun_ Maverick (2022) – New Trailer - Paramount Pictures.mp4';
 
         $this->get($url, $filename);
     }
