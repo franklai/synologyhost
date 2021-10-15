@@ -2,7 +2,7 @@
 "name": "fujirou_youtube",
 "hostprefix": "youtube.com,youtu.be",
 "displayname": "YouTube alt",
-"version": "1.17",
+"version": "1.18",
 "majorversion": "3",
 "minorversion": "2",
 "minfirmware": "1834",
