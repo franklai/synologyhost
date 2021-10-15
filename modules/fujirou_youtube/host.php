@@ -35,6 +35,65 @@ class FujirouHostYouTube
         }
     }
 
+    private function getByAndroidAPI($html)
+    {
+        $apiKey = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+
+        $videoId = $this->getVideoId($html);
+        if (!$videoId) {
+            $this->printMsg("failed to get video id\n");
+            return null;
+        }
+        $this->printMsg("video id: $videoId\n");
+
+        $apiUrl = "https://www.youtube.com/youtubei/v1/player?key=$apiKey";
+        $headers = array(
+            'X-YouTube-Client-Name: 3',
+            'X-YouTube-Client-Version: 16.20',
+            'content-type: application/json',
+        );
+        $post_data = array(
+            'videoId' => $videoId,
+            'context' => array(
+                'client' => array(
+                    'clientName' => 'ANDROID',
+                    'clientVersion' => '16.20',
+                    'hl' => 'en',
+                )
+            ),
+            'playbackContext' => array(
+                'contentPlaybackContext' => array(
+                    'html5Preference' => 'HTML5_PREF_WANTS',
+                )
+            ),
+            'contentCheckOk' => true,
+            'racyCheckOk' => true,
+        );
+        $post_fields = json_encode($post_data);
+        $resp = Common::getContent($apiUrl, $post_fields, $headers);
+        if (empty($resp)) {
+            $this->printMsg("Failed to get resp from Android API\n");
+            return null;
+        }
+
+        $obj = json_decode($resp, true);
+        if (empty($obj)) {
+            $this->printMsg("Failed to json decode of resp from Android API\n");
+            return null;
+        }
+        if (!array_key_exists('streamingData', $obj) || !array_key_exists('formats', $obj['streamingData'])) {
+            $this->printMsg("Failed to get streamingData.formats from Android API\n");
+            return null;
+        }
+        $formats = $obj['streamingData']['formats'];
+        $map = array();
+        foreach ($formats as $item) {
+            $map[$item['itag']] = $item['url'];
+        }
+
+        return $map;
+    }
+
     public function GetDownloadInfo()
     {
         $ret = array(
@@ -46,13 +105,21 @@ class FujirouHostYouTube
         // 1. get html of YouTube url
         $html = Common::getContent($url);
 
-        $videoMap = $this->getVideoMapGeneral($html);
-        if (!$videoMap) {
+        $videoMap = $this->getByAndroidAPI($html);
+
+        if (empty($videoMap)) {
+            $this->printMsg("Failed to get video map from Android API; try general get\n");
+            $videoMap = $this->getVideoMapGeneral($html);
+        }
+        if (empty($videoMap)) {
             if (strpos($html, 'LOGIN_REQUIRED') !== false) {
                 $this->printMsg("require login\n");
                 $videoMap = $this->getVideoMapForAgeGate($html);
             }
         }
+        $this->printMsg("\n=== gonna be video map ===\n");
+        $this->printMsg($videoMap);
+        $this->printMsg("\n=== video map end ===\n");
 
         $video = $this->chooseVideo($videoMap);
         if (empty($video)) {
@@ -294,7 +361,6 @@ class FujirouHostYouTube
         parse_str($query, $items);
         return $items['list'];
     }
-
 
     private function getVideoId($html)
     {
@@ -665,9 +731,9 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     $url = 'https://www.youtube.com/watch?v=RGRCx-g402I'; // Aimer Sun Dance Penny Rain
     // $url = 'https://www.youtube.com/watch?v=m9tbPWjvGYM'; // Red Sparrow 2018 - Jennifer Lawrence School Scene - HD; age-gated
     // $url = 'https://www.youtube.com/watch?v=AQykKvUhTfo'; // B'z Live
-    // $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
-    $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI'; // 韋禮安 WeiBird - 一口一口
-    $url = 'https://www.youtube.com/playlist?list=OLAK5uy_kDvtd-ErInjfwkppvJ9DGp1-CgJBccpHc'; // Chata - SUMMER FOCUS
+    $url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'; // me at zoo
+    // $url = 'https://www.youtube.com/watch?v=_tRZ5EQHMqI'; // 韋禮安 WeiBird - 一口一口
+    // $url = 'https://www.youtube.com/playlist?list=OLAK5uy_kDvtd-ErInjfwkppvJ9DGp1-CgJBccpHc'; // Chata - SUMMER FOCUS
 
     $get_list = false;
     if ($argc >= 2) {
