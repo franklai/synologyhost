@@ -63,31 +63,33 @@ class FujirouHostDailymotion
 
         // 1. parse video id from url
         $videoId = $this->getVideoId($url);
-        $this->printMsg("video id: $videoId");
+        $this->printMsg("video id: $videoId\n");
         if (!$videoId) {
-            $this->printMsg("Failed to get video id from url [$url].");
+            $this->printMsg("Failed to get video id from url [$url].\n");
             return $ret;
         }
 
         // 2. get json info of video
         $jsonUrl = sprintf(
-            "https://www.dailymotion.com/embed/video/%s",
+            "https://www.dailymotion.com/player/metadata/video/%s",
             $videoId
         );
-        $this->printMsg("JSON url is [$jsonUrl]");
+        $this->printMsg("JSON url is [$jsonUrl]\n");
 
-        $html = Common::getContent($jsonUrl, $this->cookie_path);
-
-        $json = $this->getJsonFromHtml($html);
+        $jsonText = Common::getContent($jsonUrl, $this->cookie_path);
+        $json = json_decode($jsonText, true);;
         if (!$json) {
-            $this->printMsg('Failed to get json from html.');
+            $this->printMsg("Failed to get json from html.\n");
             return $ret;
         }
 
         // 3. find url from json info
         $videoUrl = $this->getVideoUrl($json);
         if (empty($videoUrl)) {
-            $this->printMsg('Failed to get video url from json.');
+            $this->printMsg("Failed to get video url from json.\n");
+            $this->printMsg("== print html ==\n");
+            $this->printMsg($html);
+            $this->printMsg("== print html end ==\n");
             return $ret;
         }
 
@@ -164,24 +166,20 @@ class FujirouHostDailymotion
         $url = null;
         $type = null;
 
-        if (!array_key_exists('metadata', $json)) {
-            return $url;
-        }
-        $metadata = $json['metadata'];
-
-        if (!array_key_exists('qualities', $metadata)) {
+        if (!array_key_exists('qualities', $json)) {
+            $this->printMsg("no key: qualities in json\n");
             return $url;
         }
 
-        $qualities = $metadata['qualities'];
+        $qualities = $json['qualities'];
 
         foreach ($qualities as $q => $items) {
-            $this->printMsg("quality [" . $q . "]");
+            $this->printMsg("quality [" . $q . "]\n");
 
             foreach ($items as $item) {
                 $type = $item['type'];
                 $url = $item['url'];
-                $this->printMsg("\ttype [$type], url: $url");
+                $this->printMsg("\ttype [$type], url: $url\n");
             }
         }
 
@@ -189,25 +187,22 @@ class FujirouHostDailymotion
             $url_from_m3u8 = $this->findVideoFromM3u8($url);
             if ($url_from_m3u8) {
                 $url = $url_from_m3u8;
-                $this->printMsg("find video url: $url from m3u8");
+                $this->printMsg("find video url: $url from m3u8\n");
                 return $url;
             }
         }
 
-        $this->printMsg("Choose last url: $url");
+        $this->printMsg("Choose last url: $url\n");
 
         return $url;
     }
 
     private function getVideoTitle($json)
     {
-        if (!array_key_exists('metadata', $json)) {
+        if (!array_key_exists('title', $json)) {
             return null;
         }
-        if (!array_key_exists('title', $json['metadata'])) {
-            return null;
-        }
-        return $json['metadata']['title'];
+        return $json['title'];
     }
 }
 
@@ -228,7 +223,7 @@ if (!empty($argv) && basename($argv[0]) === basename(__FILE__)) {
     }
 
     $refClass = new ReflectionClass($module);
-    $obj = $refClass->newInstance($url, '', '', array());
+    $obj = $refClass->newInstance($url, '', '', array(), true);
 
     $info = $obj->GetDownloadInfo();
 
