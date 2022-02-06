@@ -303,7 +303,7 @@ class FujirouHostBilibili
     private function find_bvid_in_html($raw, $epid)
     {
         if ($epid) {
-            $pattern = "/\"id\":$epid,[^}]*?\"bvid\":\"(BV[0-9a-zA-Z]+)\"/";
+            $pattern = "/\"$epid\":\{.*?\"bvid\":\"(BV[0-9a-zA-Z]+)\"/";
         } else {
             // get first bvid when no ep id
             $pattern = "/\"bvid\":\"(BV[0-9a-zA-Z]+)\"/";
