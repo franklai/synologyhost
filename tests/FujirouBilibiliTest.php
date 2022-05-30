@@ -25,19 +25,6 @@ final class FujirouBilibiliTest extends HostsTestCase
         $this->get($url, $filename, $cid);
     }
 
-    public function testBangumiEp()
-    {
-        if (getenv('GITHUB_ACTIONS')) {
-            $this->markTestSkipped('skip GitHub Actions due to ip/country restriction.');
-        }
-
-        $url = 'https://www.bilibili.com/bangumi/play/ep88882';
-        $filename = '【4月】迷家 10【独家正版】.flv';
-        $cid = '10732315';
-
-        $this->get($url, $filename, $cid);
-    }
-
     public function testBangumiSs()
     {
         if (getenv('GITHUB_ACTIONS')) {
