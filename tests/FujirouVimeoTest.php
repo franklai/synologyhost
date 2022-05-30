@@ -25,8 +25,8 @@ final class FujirouVimeoTest extends HostsTestCase
 
     public function testGetJapaneseTitle()
     {
-        $url = 'https://vimeo.com/647593213';
-        $filename = 'コードギアス Genesic Re;CODE 反逆のルルーシュ篇.mp4';
+        $url = 'https://vimeo.com/145638647';
+        $filename = 'エヴァ新幹線「500 TYPE EVA」.mp4';
 
         $this->get($url, $filename);
     }
