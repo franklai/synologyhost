@@ -23,9 +23,9 @@ class FujirouHostBilibili
 
     private function printMsg($msg)
     {
-        // if (!$this->verbose) {
-        //     return;
-        // }
+        if (!$this->verbose) {
+            return;
+        }
 
         if (is_array($msg)) {
             print_r($msg);
@@ -121,7 +121,6 @@ class FujirouHostBilibili
         $data = $json['data'];
         $list_name = $data['title'];
         $this->printMsg("list title: $list_name\n");
-
 
         $ret = array(
             DOWNLOAD_LIST_NAME => $list_name,
@@ -289,6 +288,12 @@ class FujirouHostBilibili
         $this->printMsg("===== JSON begin (find_url_in_json) =====");
         $this->printMsg($json);
         $this->printMsg("===== JSON end =====");
+
+        if ($json['code'] !== 0) {
+            $this->printMsg("Response code not 0");
+            $this->printMsg("code: " . $json['code'] . ", message: " . $json['message']);
+            return '';
+        }
 
         $data = $json['data'];
         return $data['durl'][0]['url'];
