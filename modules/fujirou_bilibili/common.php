@@ -2,7 +2,7 @@
 
 class Common
 {
-    public static function getContent($url)
+    public static function getContent($url, $post_fields = null, $headers = null)
     {
         $curl = curl_init();
 
@@ -12,6 +12,13 @@ class Common
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        if (!empty($post_fields)) {
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $post_fields);
+        }
+        if (!empty($headers)) {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        }
 
         // curl_setopt($curl, CURLOPT_VERBOSE, true);
 
