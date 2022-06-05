@@ -261,12 +261,6 @@ class FujirouHostBilibili
             throw new Exception("Failed to get content of url $url");
         }
 
-        if ($this->verbose) {
-            echo "\n===== JSON begin (request_video_by_json) =====\n";
-            echo json_encode($json, JSON_PRETTY_PRINT);
-            echo "\n===== JSON end =====\n";
-        }
-
         $video_url = $this->find_url_in_json($raw);
 
         return $video_url;
@@ -292,11 +286,9 @@ class FujirouHostBilibili
             throw new Exception("Failed to parse [$raw] to JSON.");
         }
 
-        if ($this->verbose) {
-            echo "\n===== JSON begin (find_url_in_json) =====\n";
-            echo json_encode($json, JSON_PRETTY_PRINT);
-            echo "\n===== JSON end =====\n";
-        }
+        $this->printMsg("===== JSON begin (find_url_in_json) =====");
+        $this->printMsg($json);
+        $this->printMsg("===== JSON end =====");
 
         $data = $json['data'];
         return $data['durl'][0]['url'];
