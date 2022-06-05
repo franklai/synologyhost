@@ -20,7 +20,7 @@ class Common
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
 
-        // curl_setopt($curl, CURLOPT_VERBOSE, true);
+        curl_setopt($curl, CURLOPT_VERBOSE, true);
 
         curl_setopt($curl, CURLOPT_URL, $url);
 

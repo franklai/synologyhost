@@ -257,6 +257,7 @@ class FujirouHostBilibili
 
         $raw = Common::getContent($url);
         if (!$raw) {
+            $this->printMsg("Failed to get content of url: $url");
             throw new Exception("Failed to get content of url $url");
         }
 
