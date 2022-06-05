@@ -23,9 +23,9 @@ class FujirouHostBilibili
 
     private function printMsg($msg)
     {
-        if (!$this->verbose) {
-            return;
-        }
+        // if (!$this->verbose) {
+        //     return;
+        // }
 
         if (is_array($msg)) {
             print_r($msg);
@@ -72,6 +72,7 @@ class FujirouHostBilibili
 
         // get video url by json
         $video_url = $this->request_video_by_json($json, $page);
+        $this->printMsg(" == video url: $video_url");
 
         // parse extension name from video url
         if (false !== strpos($video_url, '.mp4') || false !== strpos($video_url, '/mp4/')) {
