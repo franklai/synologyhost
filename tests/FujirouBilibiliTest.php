@@ -9,6 +9,10 @@ final class FujirouBilibiliTest extends HostsTestCase
 
     public function testGetAid()
     {
+        if (getenv('GITHUB_ACTIONS')) {
+            $this->markTestSkipped('skip GitHub Actions due to ip/country restriction.');
+        }
+
         $url = 'https://www.bilibili.com/video/av540146714';
         $filename = '【ARASHI】【字】周六的岚朋友SP 2020.04.04 龟梨和也 山下智久 浅田舞 浅田真央【Aloha字幕组】.flv';
         $cid = '174481071';
@@ -18,6 +22,10 @@ final class FujirouBilibiliTest extends HostsTestCase
 
     public function testGetBvid()
     {
+        if (getenv('GITHUB_ACTIONS')) {
+            $this->markTestSkipped('skip GitHub Actions due to ip/country restriction.');
+        }
+
         $url = 'https://www.bilibili.com/video/BV1QE411P7E7/';
         $filename = '【岚】伏兵组的胡闹小剧场.flv';
         $cid = '166644611';
@@ -40,6 +48,10 @@ final class FujirouBilibiliTest extends HostsTestCase
 
     public function testGetPages()
     {
+        if (getenv('GITHUB_ACTIONS')) {
+            $this->markTestSkipped('skip GitHub Actions due to ip/country restriction.');
+        }
+
         $url = 'https://www.bilibili.com/video/BV1vs411k7tn?p=11';
         $filename = '「Thunderbolt Fantasy 东离剑游纪」原声集专辑 - 11.Kguy&kill don_t 生kiLL.flv';
         $cid = '9726377';
