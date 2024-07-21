@@ -3,6 +3,7 @@ if (!class_exists('Common')) {
     require 'common.php';
 }
 
+defined('DOWNLOAD_ERROR') or define('DOWNLOAD_ERROR', 'error');
 defined('DOWNLOAD_LIST_NAME') or define('DOWNLOAD_LIST_NAME', 'list_name');
 defined('DOWNLOAD_LIST_FILES') or define('DOWNLOAD_LIST_FILES', 'list_files');
 defined('DOWNLOAD_FILENAME') or define('DOWNLOAD_FILENAME', 'filename');
@@ -37,8 +38,6 @@ class FujirouHostYouTube
 
     private function getByAndroidAPI($html)
     {
-        $apiKey = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
-
         $videoId = $this->getVideoId($html);
         if (!$videoId) {
             $this->printMsg("failed to get video id\n");
@@ -46,28 +45,19 @@ class FujirouHostYouTube
         }
         $this->printMsg("video id: $videoId\n");
 
-        $apiUrl = "https://www.youtube.com/youtubei/v1/player?key=$apiKey";
+        $apiUrl = "https://www.youtube.com/youtubei/v1/player";
         $headers = array(
-            'X-YouTube-Client-Name: 3',
-            'X-YouTube-Client-Version: 16.20',
             'content-type: application/json',
         );
         $post_data = array(
             'videoId' => $videoId,
             'context' => array(
                 'client' => array(
-                    'clientName' => 'ANDROID',
-                    'clientVersion' => '16.20',
+                    'clientName' => 'MEDIA_CONNECT_FRONTEND',
+                    'clientVersion' => '0.1',
                     'hl' => 'en',
                 )
             ),
-            'playbackContext' => array(
-                'contentPlaybackContext' => array(
-                    'html5Preference' => 'HTML5_PREF_WANTS',
-                )
-            ),
-            'contentCheckOk' => true,
-            'racyCheckOk' => true,
         );
         $post_fields = json_encode($post_data);
         $resp = Common::getContent($apiUrl, $post_fields, $headers);
