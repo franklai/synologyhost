@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from contextlib import contextmanager
 import json
+import logging
 import os
 import shutil
 import sys
